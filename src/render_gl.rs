@@ -1,6 +1,6 @@
 use gl;
 use std;
-use std::ffi::{ CString, CStr };
+use std::ffi::{ CStr, CString };
 
 pub struct Program {
     id: gl::types::GLuint,
@@ -20,7 +20,6 @@ impl Program {
             gl::LinkProgram(program_id);
         }
 
-        // Error handling for linking shader to program
         let mut success: gl::types::GLint = 1;
         unsafe {
             gl::GetProgramiv(program_id, gl::LINK_STATUS, &mut success);
@@ -55,14 +54,14 @@ impl Program {
         Ok(Program { id: program_id })
     }
 
+    pub fn id(&self) -> gl::types::GLuint {
+        self.id
+    }
+
     pub fn set_used(&self) {
         unsafe {
             gl::UseProgram(self.id);
         }
-    }
-
-    pub fn id(&self) -> gl::types::GLuint {
-        self.id
     }
 }
 
@@ -95,8 +94,6 @@ impl Shader {
     pub fn id(&self) -> gl::types::GLuint {
         self.id
     }
-
-    // continue here
 }
 
 impl Drop for Shader {
@@ -107,9 +104,8 @@ impl Drop for Shader {
     }
 }
 
-fn shader_from_source(source: &CStr, kind: gl::types::GLuint) -> Result<gl::types::GLuint, String> {
-    let id = unsafe { gl::CreateShader(gl::VERTEX_SHADER) };
-
+fn shader_from_source(source: &CStr, kind: gl::types::GLenum) -> Result<gl::types::GLuint, String> {
+    let id = unsafe { gl::CreateShader(kind) };
     unsafe {
         gl::ShaderSource(id, 1, &source.as_ptr(), std::ptr::null());
         gl::CompileShader(id);
@@ -141,8 +137,6 @@ fn shader_from_source(source: &CStr, kind: gl::types::GLuint) -> Result<gl::type
     }
 
     Ok(id)
-
-    // continue here
 }
 
 fn create_whitespace_cstring_with_len(len: usize) -> CString {
