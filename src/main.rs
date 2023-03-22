@@ -3,6 +3,18 @@ extern crate sdl2;
 
 pub mod render_gl;
 
+const WIDTH: u32 = 900;
+const HEIGHT: u32 = 700;
+
+const MAP_X: i32 = 8;
+const MAP_Y: i32 = 8;
+const MAP_S: i32 = 64;
+
+static mut MAP: [i32; 64] = [
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 0, 0, 0, 1, 1, 0, 1, 0, 0, 0, 0, 1, 1, 0, 1, 0, 0, 0, 0, 1,
+    1, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+];
+
 fn main() {
     let sdl = sdl2::init().unwrap();
     let video_subsystem = sdl.video().unwrap();
@@ -12,7 +24,12 @@ fn main() {
     gl_attr.set_context_profile(sdl2::video::GLProfile::Core);
     gl_attr.set_context_version(4, 1);
 
-    let window = video_subsystem.window("Game", 900, 700).opengl().resizable().build().unwrap();
+    let window = video_subsystem
+        .window("Game", WIDTH, HEIGHT)
+        .opengl()
+        .resizable()
+        .build()
+        .unwrap();
 
     let _gl_context = window.gl_create_context().unwrap();
     let _gl = gl::load_with(
@@ -34,7 +51,7 @@ fn main() {
 
     // set up vertex buffer object
 
-    let vertices: Vec<f32> = vec![-1.0, 1.0, 0.0];
+    let vertices: Vec<f32> = vec![-1.0, 1.0, 0.0, 0.0, -1.0, 0.0, 1.0, 1.0, 0.0];
 
     let mut vbo: gl::types::GLuint = 0;
     unsafe {
@@ -78,7 +95,7 @@ fn main() {
     // set up shared state for window
 
     unsafe {
-        gl::Viewport(0, 0, 900, 700);
+        gl::Viewport(0, 0, WIDTH, HEIGHT);
         gl::ClearColor(0.3, 0.3, 0.5, 1.0);
     }
 
@@ -105,12 +122,84 @@ fn main() {
         unsafe {
             gl::BindVertexArray(vao);
             gl::DrawArrays(
-                gl::POINTS, // mode
+                gl::TRIANGLES, // mode
                 0, // starting index in the enabled arrays
                 3 // number of indices to be rendered
             );
         }
 
         window.gl_swap_window();
+    }
+}
+
+fn get_x(pos_x: f32) -> f32 {
+    let offset: f32 = (WIDTH as f32) / 2.0;
+    return (pos_x - offset) / offset;
+}
+
+fn get_y(pos_y: f32) -> f32 {
+    let offset: f32 = (HEIGHT as f32) / 2.0;
+    return (pos_y - offset) / offset;
+}
+
+fn construct_verticies(player: [f32; 4]) -> Vec<f32> {
+    let mut verticies: Vec<f32> = Vec::new();
+    for i in 0..7 {
+        for ii in 0..7 {
+            if MAP[i][ii] == 1 {
+                verticies.push(get_x((i as i32 * MAP_S) as f32));
+                verticies.push(get_y((ii as i32 * MAP_S) as f32));
+            }
+        }
+    }
+
+    return verticies;
+}
+
+pub struct Color {
+    r: f32,
+    g: f32,
+    b: f32,
+}
+
+impl Color {
+    pub fn new(red: f32, green: f32, blue: f32) -> Color {
+        let r = red;
+        let g = green;
+        let b = blue;
+
+        Color { r, g, b }
+    }
+}
+
+pub struct Square {
+    tl_point: [f32; 3],
+    tr_point: [f32; 3],
+    bl_point: [f32; 3],
+    br_point: [f32; 3],
+    color: [f32; 3],
+}
+
+impl Square {
+    pub fn new(index_1: i32, index_2: i32, color: Color) -> Square {
+        let tl_point = [get_x((index_1 * MAP_S) as f32), get_y((index_2 * MAP_S) as f32), 0.0];
+        let tr_point = [
+            get_x((index_1 * MAP_S + MAP_S) as f32),
+            get_y((index_2 * MAP_S) as f32),
+            0.0,
+        ];
+        let bl_point = [
+            get_x((index_1 * MAP_S) as f32),
+            get_y((index_2 * MAP_S + MAP_S) as f32),
+            0.0,
+        ];
+        let br_point = [
+            get_x((index_1 * MAP_S + MAP_S) as f32),
+            get_y((index_2 * MAP_S + MAP_S) as f32),
+            0.0,
+        ];
+        let color = [color.r, color.g, color.b];
+
+        Square { tl_point, tr_point, bl_point, br_point, color }
     }
 }

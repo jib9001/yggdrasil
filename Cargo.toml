@@ -1,5 +1,5 @@
 [package]
-name = "learn_gl_with_rust"
+name = "yggdrasil"
 version = "0.1.0"
 edition = "2018"
 
