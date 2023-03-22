@@ -1,8 +1,13 @@
 [package]
-name = "template"
+name = "learn_gl_with_rust"
 version = "0.1.0"
-edition = "2021"
+edition = "2018"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+gl = "0.14.0"
+
+[dependencies.sdl2]
+version = "0.35.2"
+features = ["bundled", "static-link"]
