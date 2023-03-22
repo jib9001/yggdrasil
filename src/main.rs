@@ -34,7 +34,7 @@ fn main() {
 
     // set up vertex buffer object
 
-    let vertices: Vec<f32> = vec![-0.5, -0.5, 0.0, 0.5, -0.5, 0.0, 0.0, 0.5, 0.0];
+    let vertices: Vec<f32> = vec![-1.0, 1.0, 0.0];
 
     let mut vbo: gl::types::GLuint = 0;
     unsafe {
@@ -105,7 +105,7 @@ fn main() {
         unsafe {
             gl::BindVertexArray(vao);
             gl::DrawArrays(
-                gl::TRIANGLES, // mode
+                gl::POINTS, // mode
                 0, // starting index in the enabled arrays
                 3 // number of indices to be rendered
             );
