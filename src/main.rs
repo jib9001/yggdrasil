@@ -10,9 +10,15 @@ const MAP_X: i32 = 8;
 const MAP_Y: i32 = 8;
 const MAP_S: i32 = 64;
 
-static mut MAP: [i32; 64] = [
-    1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 0, 0, 0, 1, 1, 0, 1, 0, 0, 0, 0, 1, 1, 0, 1, 0, 0, 0, 0, 1,
-    1, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+static MAP: [[u8; 8]; 8] = [
+    [1, 1, 1, 1, 1, 1, 1, 1],
+    [1, 0, 1, 0, 0, 0, 0, 1],
+    [1, 0, 1, 0, 0, 0, 0, 1],
+    [1, 0, 1, 0, 0, 0, 0, 1],
+    [1, 0, 0, 0, 0, 0, 0, 1],
+    [1, 0, 0, 0, 1, 0, 0, 1],
+    [1, 0, 0, 0, 0, 0, 0, 1],
+    [1, 1, 1, 1, 1, 1, 1, 1],
 ];
 
 fn main() {
@@ -95,7 +101,7 @@ fn main() {
     // set up shared state for window
 
     unsafe {
-        gl::Viewport(0, 0, WIDTH, HEIGHT);
+        gl::Viewport(0, 0, WIDTH as i32, HEIGHT as i32);
         gl::ClearColor(0.3, 0.3, 0.5, 1.0);
     }
 
@@ -147,8 +153,8 @@ fn construct_verticies(player: [f32; 4]) -> Vec<f32> {
     for i in 0..7 {
         for ii in 0..7 {
             if MAP[i][ii] == 1 {
-                verticies.push(get_x((i as i32 * MAP_S) as f32));
-                verticies.push(get_y((ii as i32 * MAP_S) as f32));
+                verticies.push(get_x(((i as i32) * MAP_S) as f32));
+                verticies.push(get_y(((ii as i32) * MAP_S) as f32));
             }
         }
     }
