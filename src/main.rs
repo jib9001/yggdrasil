@@ -6,8 +6,8 @@ pub mod render_gl;
 const WIDTH: u32 = 900;
 const HEIGHT: u32 = 700;
 
-const MAP_X: i32 = 8;
-const MAP_Y: i32 = 8;
+const _MAP_X: i32 = 8;
+const _MAP_Y: i32 = 8;
 const MAP_S: i32 = 64;
 
 static MAP: [[u8; 8]; 8] = [
@@ -71,10 +71,6 @@ fn main() {
 
     // set up vertex buffer object
     let vertices: Vec<f32> = construct_vertices(player);
-
-    for num in &vertices {
-        println!("{}", num);
-    }
 
     // create vertex buffer object
     let mut vbo: gl::types::GLuint = 0;
@@ -192,12 +188,12 @@ fn construct_vertices(player: Player) -> Vec<f32> {
             if MAP[i][ii] == 1 {
                 vertices = push_square_vertices(
                     vertices,
-                    Square::new(i as i32, ii as i32, Color::new(1.0, 1.0, 1.0))
+                    Square::new(ii as i32, i as i32, Color::new(1.0, 1.0, 1.0))
                 );
             } else {
                 vertices = push_square_vertices(
                     vertices,
-                    Square::new(i as i32, ii as i32, Color::new(0.0, 0.0, 0.0))
+                    Square::new(ii as i32, i as i32, Color::new(0.0, 0.0, 0.0))
                 );
             }
         }
@@ -207,86 +203,62 @@ fn construct_vertices(player: Player) -> Vec<f32> {
     return vertices;
 }
 
-fn push_square_vertices<f32>(vertices: Vec<f32>, square: Square) -> Vec<f32> {
-    for num in square.tl_point {
-        vertices.push(num);
+fn push_square_vertices(mut vertices: Vec<f32>, square: Square) -> Vec<f32> {
+    let points: [[f32; 3]; 4] = [
+        square.tl_point,
+        square.tr_point,
+        square.bl_point,
+        square.br_point,
+    ];
+
+    for i in 0..=2 {
+        for num in points[i] {
+            vertices.push(num);
+        }
+        for num in square.color {
+            vertices.push(num);
+        }
     }
-    for num in square.color {
-        vertices.push(num);
-    }
-    for num in square.tr_point {
-        vertices.push(num);
-    }
-    for num in square.color {
-        vertices.push(num);
-    }
-    for num in square.bl_point {
-        vertices.push(num);
-    }
-    for num in square.color {
-        vertices.push(num);
-    }
-    for num in square.bl_point {
-        vertices.push(num);
-    }
-    for num in square.color {
-        vertices.push(num);
-    }
-    for num in square.br_point {
-        vertices.push(num);
-    }
-    for num in square.color {
-        vertices.push(num);
-    }
-    for num in square.tr_point {
-        vertices.push(num);
-    }
-    for num in square.color {
-        vertices.push(num);
+
+    for i in 1..=3 {
+        for num in points[i] {
+            vertices.push(num);
+        }
+        for num in square.color {
+            vertices.push(num);
+        }
     }
 
     return vertices;
 }
 
-fn push_player_vertices<T>(vertices: Vec<f32>, player: Player) -> Vec<f32> {
-    for num in player.tl_point {
-        vertices.push(num);
-    }
-    for num in player.color {
-        vertices.push(num);
-    }
-    for num in player.tr_point {
-        vertices.push(num);
-    }
-    for num in player.color {
-        vertices.push(num);
-    }
-    for num in player.bl_point {
-        vertices.push(num);
-    }
-    for num in player.color {
-        vertices.push(num);
-    }
-    for num in player.bl_point {
-        vertices.push(num);
-    }
-    for num in player.color {
-        vertices.push(num);
-    }
-    for num in player.br_point {
-        vertices.push(num);
-    }
-    for num in player.color {
-        vertices.push(num);
-    }
-    for num in player.tr_point {
-        vertices.push(num);
-    }
-    for num in player.color {
-        vertices.push(num);
+fn push_player_vertices(mut vertices: Vec<f32>, player: Player) -> Vec<f32> {
+    let points: [[f32; 3]; 4] = [
+        player.tl_point,
+        player.tr_point,
+        player.bl_point,
+        player.br_point,
+    ];
+
+    for i in 0..=2 {
+        for num in points[i] {
+            vertices.push(num);
+        }
+        for num in player.color {
+            vertices.push(num);
+        }
     }
 
-    return vertice;
+    for i in 1..=3 {
+        for num in points[i] {
+            vertices.push(num);
+        }
+        for num in player.color {
+            vertices.push(num);
+        }
+    }
+
+    return vertices;
 }
 
 pub struct Color {
@@ -348,8 +320,8 @@ impl Square {
 }
 
 pub struct Player {
-    x_pos: f32,
-    y_pos: f32,
+    _x_pos: f32,
+    _y_pos: f32,
     tl_point: [f32; 3],
     tr_point: [f32; 3],
     bl_point: [f32; 3],
@@ -359,8 +331,8 @@ pub struct Player {
 
 impl Player {
     pub fn new(x: f32, y: f32) -> Player {
-        let x_pos = x;
-        let y_pos = y;
+        let _x_pos = x;
+        let _y_pos = y;
         let tl_point = [get_x(x), get_y(y), 0.0];
         let tr_point = [get_x(x + 8.0), get_y(y), 0.0];
         let bl_point = [get_x(x), get_y(y + 8.0), 0.0];
@@ -368,8 +340,8 @@ impl Player {
         let color = [0.0, 0.0, 1.0];
 
         Player {
-            x_pos,
-            y_pos,
+            _x_pos,
+            _y_pos,
             tl_point,
             tr_point,
             bl_point,
