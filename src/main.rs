@@ -1,8 +1,6 @@
 extern crate gl;
 extern crate sdl2;
 
-use crate::draw_gl::get_y;
-use crate::draw_gl::get_x;
 use crate::window_gl::HEIGHT;
 use crate::window_gl::WIDTH;
 use crate::window_gl::MAP;
@@ -69,10 +67,10 @@ fn main() {
     let mut vertices: Vec<f32>;
 
     // create vertex buffer object
-    let mut vbo: gl::types::GLuint = 0;
+    let vbo: gl::types::GLuint = 0;
 
     // create vertex array object
-    let mut vao: gl::types::GLuint = 0;
+    let vao: gl::types::GLuint = 0;
 
     let mut bab: draw_gl::BufferArrayBinder = draw_gl::BufferArrayBinder::new(vao, vbo);
 
