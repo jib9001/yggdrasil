@@ -1,21 +1,20 @@
-use crate::window_gl::MAP_S;
-use crate::window_gl::WIDTH;
-use crate::window_gl::HEIGHT;
-use crate::draw_gl::get_y;
 use crate::draw_gl::get_x;
-
-pub mod draw_gl;
+use crate::draw_gl::get_y;
+use crate::draw_gl::Color;
+use crate::window_gl::HEIGHT;
+use crate::window_gl::WIDTH;
+use crate::window_gl::MAP_S;
 
 pub struct Square {
-    pub tl_point: [f32; 3],
-    pub tr_point: [f32; 3],
-    pub bl_point: [f32; 3],
-    pub br_point: [f32; 3],
-    pub color: [f32; 3],
+    tl_point: [f32; 3],
+    tr_point: [f32; 3],
+    bl_point: [f32; 3],
+    br_point: [f32; 3],
+    color: [f32; 3],
 }
 
 impl Square {
-    pub fn new(index_1: i32, index_2: i32, color: draw_gl::Color) -> Square {
+    pub fn new(index_1: i32, index_2: i32, color: Color) -> Square {
         let tl_point = [
             get_x((index_1 * MAP_S + 1) as f32, WIDTH),
             get_y((index_2 * MAP_S + 1) as f32, HEIGHT),
@@ -29,7 +28,6 @@ impl Square {
         let bl_point = [
             get_x((index_1 * MAP_S + 1) as f32, WIDTH),
             get_y((index_2 * MAP_S + MAP_S - 1) as f32, HEIGHT),
-            HEIGHT,
             0.0,
         ];
         let br_point = [
@@ -37,7 +35,7 @@ impl Square {
             get_y((index_2 * MAP_S + MAP_S - 1) as f32, HEIGHT),
             0.0,
         ];
-        let color = [color.r, color.g, color.b];
+        let color = color.get_colors();
 
         Square {
             tl_point,
@@ -46,5 +44,13 @@ impl Square {
             br_point,
             color,
         }
+    }
+
+    pub fn get_color(&self) -> [f32; 3] {
+        return self.color;
+    }
+
+    pub fn get_vertices(&self) -> [[f32; 3]; 4] {
+        return [self.tl_point, self.tr_point, self.bl_point, self.br_point];
     }
 }

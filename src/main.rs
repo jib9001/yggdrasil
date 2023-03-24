@@ -1,6 +1,10 @@
 extern crate gl;
 extern crate sdl2;
 
+use crate::draw_gl::get_y;
+use crate::draw_gl::get_x;
+use crate::window_gl::HEIGHT;
+use crate::window_gl::WIDTH;
 use crate::window_gl::MAP;
 use sdl2::keyboard::Scancode;
 use std::ffi::CString;
@@ -26,7 +30,7 @@ fn main() {
 
     // create window object, needs opengl context
     let window = video_subsystem
-        .window("Game", window_gl::WIDTH, window_gl::HEIGHT)
+        .window("Game", WIDTH, HEIGHT)
         .opengl()
         .resizable()
         .build()
@@ -54,8 +58,8 @@ fn main() {
 
     // set up shared state for window
     unsafe {
-        gl::Viewport(0, 0, window_gl::WIDTH as i32, window_gl::HEIGHT as i32);
-        gl::Cleardraw_gl::Color(0.3, 0.3, 0.5, 1.0);
+        gl::Viewport(0, 0, WIDTH as i32, HEIGHT as i32);
+        gl::ClearColor(0.3, 0.3, 0.5, 1.0);
     }
 
     //create player
@@ -142,18 +146,13 @@ fn construct_vertices(player: &player::Player) -> Vec<f32> {
 }
 
 fn push_square_vertices(mut vertices: Vec<f32>, wall: square::Square) -> Vec<f32> {
-    let points: [[f32; 3]; 4] = [
-        wall.tl_point,
-        wall.tr_point,
-        wall.bl_point,
-        wall.br_point,
-    ];
+    let points: [[f32; 3]; 4] = wall.get_vertices();
 
     for i in 0..=2 {
         for num in points[i] {
             vertices.push(num);
         }
-        for num in wall.color {
+        for num in wall.get_color() {
             vertices.push(num);
         }
     }
@@ -162,7 +161,7 @@ fn push_square_vertices(mut vertices: Vec<f32>, wall: square::Square) -> Vec<f32
         for num in points[i] {
             vertices.push(num);
         }
-        for num in wall.color {
+        for num in wall.get_color() {
             vertices.push(num);
         }
     }

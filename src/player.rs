@@ -1,5 +1,7 @@
-pub mod draw_gl;
-pub mod window_gl;
+use crate::draw_gl::get_y;
+use crate::draw_gl::get_x;
+use crate::window_gl::HEIGHT;
+use crate::window_gl::WIDTH;
 
 pub struct Player {
     pub x_pos: f32,
@@ -17,26 +19,10 @@ impl Player {
         let x_pos = x;
         let y_pos = y;
         let player_dir = 0.0;
-        let tl_point = [
-            draw_gl::get_x(x),
-            draw_gl::get_y(y),
-            0.0,
-        ];
-        let tr_point = [
-            draw_gl::get_x(x + 8.0),
-            draw_gl::get_y(y),
-            0.0,
-        ];
-        let bl_point = [
-            draw_gl::get_x(x),
-            draw_gl::get_y(y + 8.0),
-            0.0,
-        ];
-        let br_point = [
-            draw_gl::get_x(x + 8.0),
-            draw_gl::get_y(y + 8.0),
-            0.0,
-        ];
+        let tl_point = [get_x(x, WIDTH), get_y(y, HEIGHT), 0.0];
+        let tr_point = [get_x(x + 8.0, WIDTH), get_y(y, HEIGHT), 0.0];
+        let bl_point = [get_x(x, WIDTH), get_y(y + 8.0, HEIGHT), 0.0];
+        let br_point = [get_x(x + 8.0, WIDTH), get_y(y + 8.0, HEIGHT), 0.0];
 
         let color = [0.0, 0.0, 1.0];
 
@@ -59,36 +45,18 @@ impl Player {
 
     pub fn update_x_pos(&mut self, x: f32) {
         self.x_pos = x;
-
         self.set_conrners();
     }
 
     pub fn update_y_pos(&mut self, y: f32) {
         self.y_pos = y;
-
         self.set_conrners();
     }
 
     fn set_conrners(&mut self) {
-        self.tl_point = [
-            draw_gl::get_x(self.x_pos, window_gl::WIDTH),
-            draw_gl::get_y(self.y_pos, window_gl::HEIGHT),
-            0.0,
-        ];
-        self.tr_point = [
-            draw_gl::get_x(self.x_pos + 8.0, window_gl::WIDTH),
-            draw_gl::get_y(self.y_pos, window_gl::HEIGHT),
-            0.0,
-        ];
-        self.bl_point = [
-            draw_gl::get_x(self.x_pos, window_gl::WIDTH),
-            draw_gl::get_y(self.y_pos + 8.0, window_gl::HEIGHT),
-            0.0,
-        ];
-        self.br_point = [
-            draw_gl::get_x(self.x_pos + 8.0, window_gl::WIDTH),
-            draw_gl::get_y(self.y_pos + 8.0, window_gl::HEIGHT),
-            0.0,
-        ];
+        self.tl_point = [get_x(self.x_pos, WIDTH), get_y(self.y_pos, HEIGHT), 0.0];
+        self.tr_point = [get_x(self.x_pos + 8.0, WIDTH), get_y(self.y_pos, HEIGHT), 0.0];
+        self.bl_point = [get_x(self.x_pos, WIDTH), get_y(self.y_pos + 8.0, HEIGHT), 0.0];
+        self.br_point = [get_x(self.x_pos + 8.0, WIDTH), get_y(self.y_pos + 8.0, HEIGHT), 0.0];
     }
 }

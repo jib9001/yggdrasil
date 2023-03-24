@@ -84,6 +84,10 @@ impl Color {
 
         Color { r, g, b }
     }
+
+    pub fn get_colors(&self) -> [f32; 3] {
+        return [self.r, self.g, self.b];
+    }
 }
 
 pub fn get_x(pos_x: f32, width: u32) -> f32 {
