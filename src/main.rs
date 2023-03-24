@@ -43,12 +43,12 @@ fn main() {
 
     // compile vertex shader "triangle.vert"
     let vert_shader = render_gl::Shader
-        ::from_vert_source(&CString::new(include_str!("triangle.vert")).unwrap())
+        ::from_vert_source(&CString::new(include_str!("./shaders/triangle.vert")).unwrap())
         .unwrap();
 
     // compile fragment shader "triangle.frag"
     let frag_shader = render_gl::Shader
-        ::from_frag_source(&CString::new(include_str!("triangle.frag")).unwrap())
+        ::from_frag_source(&CString::new(include_str!("./shaders/triangle.frag")).unwrap())
         .unwrap();
 
     // create shader program and link compiled shaders to it
