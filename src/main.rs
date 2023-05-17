@@ -63,16 +63,16 @@ fn main() {
     //create player
     let mut player: player::Player = player::Player::new(200.0, 200.0);
 
-    // set up vertex buffer object
-    let mut vertices: Vec<f32>;
+    // create vertex buffer object for squares
+    let vbo_squares: gl::types::GLuint = 0;
+    // create vertex attribute object for sauares
+    let vao_squares: gl::types::GLuint = 0;
 
-    // create vertex buffer object
-    let vbo: gl::types::GLuint = 0;
-
-    // create vertex array object
-    let vao: gl::types::GLuint = 0;
-
-    let mut bab: draw_gl::BufferArrayBinder = draw_gl::BufferArrayBinder::new(vao, vbo);
+    // object for binding arrays to the
+    let mut bab: draw_gl::BufferArrayBinder = draw_gl::BufferArrayBinder::new(
+        vao_squares,
+        vbo_squares
+    );
 
     // main loop
     let mut event_pump = sdl.event_pump().unwrap();
@@ -86,10 +86,14 @@ fn main() {
             }
         }
 
-        player = get_input(&event_pump, player);
-        vertices = construct_vertices(&player);
+        // create vertex array wrapper
+        let mut vertices: VertexArrayWrapper = VertexArrayWrapper::new();
 
-        bab.set_buffers(&vertices);
+        player = get_input(&event_pump, player);
+        construct_vertices(&player, &mut vertices);
+
+        bab.set_buffers(&vertices.points());
+        bab.set_vertex_attribs(3, 6, 3);
 
         // create opengl buffer from buffer object
         unsafe {
@@ -98,7 +102,8 @@ fn main() {
 
         shader_program.set_used();
 
-        bab.draw_arrays(gl::TRIANGLES, 6, &vertices);
+        bab.draw_arrays(gl::TRIANGLES, 6, 0, vertices.triangle_end() as i32);
+        bab.draw_arrays(gl::LINES, 6, 0, vertices.len() as i32);
 
         window.gl_swap_window();
     }
@@ -121,29 +126,27 @@ fn get_input(event_pump: &sdl2::EventPump, mut player: player::Player) -> player
     return player;
 }
 
-fn construct_vertices(player: &player::Player) -> Vec<f32> {
-    let mut vertices: Vec<f32> = Vec::new();
+fn construct_vertices(player: &player::Player, mut vertices: &mut VertexArrayWrapper) {
     for i in 0..=7 {
         for ii in 0..=7 {
             if MAP[i][ii] == 1 {
-                vertices = push_square_vertices(
-                    vertices,
+                push_square_vertices(
+                    &mut vertices,
                     square::Square::new(ii as i32, i as i32, draw_gl::Color::new(1.0, 1.0, 1.0))
                 );
             } else {
-                vertices = push_square_vertices(
-                    vertices,
+                push_square_vertices(
+                    &mut vertices,
                     square::Square::new(ii as i32, i as i32, draw_gl::Color::new(0.0, 0.0, 0.0))
                 );
             }
         }
     }
-    vertices = push_player_vertices(vertices, player);
-
-    return vertices;
+    push_player_vertices(&mut vertices, player);
+    push_line_vertices(&mut vertices, player);
 }
 
-fn push_square_vertices(mut vertices: Vec<f32>, wall: square::Square) -> Vec<f32> {
+fn push_square_vertices(vertices: &mut VertexArrayWrapper, wall: square::Square) {
     let points: [[f32; 3]; 4] = wall.get_vertices();
 
     for i in 0..=2 {
@@ -163,11 +166,9 @@ fn push_square_vertices(mut vertices: Vec<f32>, wall: square::Square) -> Vec<f32
             vertices.push(num);
         }
     }
-
-    return vertices;
 }
 
-fn push_player_vertices(mut vertices: Vec<f32>, player: &player::Player) -> Vec<f32> {
+fn push_player_vertices(vertices: &mut VertexArrayWrapper, player: &player::Player) {
     let points: [[f32; 3]; 4] = [
         player.tl_point,
         player.tr_point,
@@ -193,5 +194,57 @@ fn push_player_vertices(mut vertices: Vec<f32>, player: &player::Player) -> Vec<
         }
     }
 
-    return vertices;
+    vertices.set_triangle_end(vertices.len());
+}
+
+fn push_line_vertices(vertices: &mut VertexArrayWrapper, player: &player::Player) {
+    vertices.push(player.get_player_x(4.0));
+    vertices.push(player.get_player_y(4.0));
+    vertices.push(0.0);
+    vertices.push(1.0);
+    vertices.push(1.0);
+    vertices.push(0.0);
+    vertices.push(player.get_player_x(4.0));
+    vertices.push(player.get_player_y(-8.0));
+    vertices.push(0.0);
+    vertices.push(1.0);
+    vertices.push(1.0);
+    vertices.push(0.0);
+}
+
+struct VertexArrayWrapper {
+    points: Vec<f32>,
+    triangle_end: usize,
+}
+
+impl VertexArrayWrapper {
+    pub fn new() -> VertexArrayWrapper {
+        let points = Vec::new();
+        let triangle_end = 0;
+
+        VertexArrayWrapper {
+            points,
+            triangle_end,
+        }
+    }
+
+    pub fn set_triangle_end(&mut self, end: usize) {
+        self.triangle_end = end;
+    }
+
+    pub fn len(&self) -> usize {
+        return self.points.len();
+    }
+
+    pub fn push(&mut self, num: f32) {
+        self.points.push(num);
+    }
+
+    pub fn points(&self) -> &Vec<f32> {
+        return &self.points;
+    }
+
+    pub fn triangle_end(&self) -> usize {
+        return self.triangle_end;
+    }
 }

@@ -53,6 +53,14 @@ impl Player {
         self.set_conrners();
     }
 
+    pub fn get_player_x(&self, offset: f32) -> f32 {
+        return get_x(self.x_pos + offset, WIDTH);
+    }
+
+    pub fn get_player_y(&self, offset: f32) -> f32 {
+        return get_y(self.y_pos + offset, HEIGHT);
+    }
+
     fn set_conrners(&mut self) {
         self.tl_point = [get_x(self.x_pos, WIDTH), get_y(self.y_pos, HEIGHT), 0.0];
         self.tr_point = [get_x(self.x_pos + 8.0, WIDTH), get_y(self.y_pos, HEIGHT), 0.0];

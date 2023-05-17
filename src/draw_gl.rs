@@ -26,45 +26,44 @@ impl BufferArrayBinder {
                 vertices.as_ptr() as *const gl::types::GLvoid, // pointer to data
                 gl::STATIC_DRAW // usage
             );
-            // I don't know why we do this, but it might need an additional buffer?
-            gl::BindBuffer(gl::ARRAY_BUFFER, 0);
             gl::GenVertexArrays(1, &mut self.vao);
             // bind the vertex array to the buffer
             gl::BindVertexArray(self.vao);
             gl::BindBuffer(gl::ARRAY_BUFFER, self.vbo);
+        }
+    }
+
+    pub fn set_vertex_attribs(&mut self, vertex_size: usize, stride: usize, frag_size: usize) {
+        unsafe {
             // enables vertex attributes in the shader
             gl::EnableVertexAttribArray(0); // this is "layout (location = 0)" in vertex shader
             gl::VertexAttribPointer(
                 0, // index of the generic vertex attribute ("layout (location = 0)")
-                3, // the number of components per generic vertex attribute
+                vertex_size as i32, // the number of components per generic vertex attribute
                 gl::FLOAT, // data type
                 gl::FALSE, // normalized (int-to-float conversion)
-                (6 * std::mem::size_of::<f32>()) as gl::types::GLint, // stride (byte offset between consecutive attributes)
+                (stride * std::mem::size_of::<f32>()) as gl::types::GLint, // stride (byte offset between consecutive attributes)
                 std::ptr::null() // offset of the first component
             );
-            gl::EnableVertexAttribArray(1); // this is "layout (location = 0)" in vertex shader
+            gl::EnableVertexAttribArray(1); // this is "layout (location = 1)" in vertex shader
             gl::VertexAttribPointer(
-                1, // index of the generic vertex attribute ("layout (location = 0)")
-                3, // the number of components per generic vertex attribute
+                1, // index of the generic vertex attribute ("layout (location = 1)")
+                frag_size as i32, // the number of components per generic vertex attributes
                 gl::FLOAT, // data type
                 gl::FALSE, // normalized (int-to-float conversion)
-                (6 * std::mem::size_of::<f32>()) as gl::types::GLint, // stride (byte offset between consecutive attributes)
-                (3 * std::mem::size_of::<f32>()) as *const gl::types::GLvoid // offset of the first component
+                (stride * std::mem::size_of::<f32>()) as gl::types::GLint, // stride (byte offset between consecutive attributes)
+                (vertex_size * std::mem::size_of::<f32>()) as *const gl::types::GLvoid // offset of the first component
             );
-            // bind the buffer to location 0, which I believe to be our shader program
-            gl::BindBuffer(gl::ARRAY_BUFFER, 0);
-            // do the same with the vertex array
-            gl::BindVertexArray(0);
         }
     }
 
-    pub fn draw_arrays(&self, mode: gl::types::GLenum, num_of_indicies: i32, vertices: &Vec<f32>) {
+    pub fn draw_arrays(&self, mode: gl::types::GLenum, num_of_indicies: i32, start: i32, end: i32) {
         unsafe {
             gl::BindVertexArray(self.vao);
             gl::DrawArrays(
                 mode, // mode
                 0, // starting index in the enabled arrays
-                ((vertices.len() as i32) / num_of_indicies) as i32 // number of indices to be rendered
+                ((end - start) / num_of_indicies) as i32 // number of indices to be rendered
             );
         }
     }
