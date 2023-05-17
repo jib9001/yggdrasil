@@ -111,10 +111,7 @@ fn main() {
         shader_program.set_used();
 
         bab.draw_arrays(gl::TRIANGLES, 6, 0, vertices.triangle_end() as i32);
-
-        //bab.set_vertex_attribs(2, 5, 3);
-
-        bab.draw_arrays(gl::LINES, 6, /*vertices.triangle_end() as i32*/0, vertices.len() as i32);
+        bab.draw_arrays(gl::LINES, 6, 0, vertices.len() as i32);
 
         printed = true;
 
