@@ -5,6 +5,7 @@ use crate::window_gl::HEIGHT;
 use crate::window_gl::WIDTH;
 use crate::window_gl::MAP;
 use sdl2::keyboard::Scancode;
+use std::f32::consts::PI;
 use std::ffi::CString;
 
 pub mod render_gl;
@@ -111,16 +112,36 @@ fn main() {
 
 fn get_input(event_pump: &sdl2::EventPump, mut player: player::Player) -> player::Player {
     if event_pump.keyboard_state().is_scancode_pressed(Scancode::A) {
-        player.update_x_pos(player.x_pos - 8.0);
+        player.update_dir(player.get_dir() - 0.1);
+
+        if player.get_dir() < 0.0 {
+            player.update_dir(player.get_dir() + 2.0 * PI);
+        }
+
+        player.update_x_dir(player.get_dir().cos());
+        player.update_y_dir(player.get_dir().sin());
     }
     if event_pump.keyboard_state().is_scancode_pressed(Scancode::D) {
-        player.update_x_pos(player.x_pos + 8.0);
+        player.update_dir(player.get_dir() + 0.1);
+
+        if player.get_dir() > 2.0 * PI {
+            player.update_dir(player.get_dir() - 2.0 * PI);
+        }
+
+        player.update_x_dir(player.get_dir().cos());
+        player.update_y_dir(player.get_dir().sin());
     }
     if event_pump.keyboard_state().is_scancode_pressed(Scancode::W) {
-        player.update_y_pos(player.y_pos - 8.0);
+        player.update_pos(
+            player.x_pos + player.get_x_dir() * 5.0,
+            player.y_pos + player.get_y_dir() * 5.0
+        );
     }
     if event_pump.keyboard_state().is_scancode_pressed(Scancode::S) {
-        player.update_y_pos(player.y_pos + 8.0);
+        player.update_pos(
+            player.x_pos - player.get_x_dir() * 5.0,
+            player.y_pos - player.get_y_dir() * 5.0
+        );
     }
 
     return player;
@@ -204,12 +225,33 @@ fn push_line_vertices(vertices: &mut VertexArrayWrapper, player: &player::Player
     vertices.push(1.0);
     vertices.push(1.0);
     vertices.push(0.0);
-    vertices.push(player.get_player_x(4.0));
-    vertices.push(player.get_player_y(-8.0));
+    vertices.push(player.get_player_x(4.0 + player.get_x_dir() * 20.0));
+    vertices.push(player.get_player_y(4.0 + player.get_y_dir() * 20.0));
     vertices.push(0.0);
     vertices.push(1.0);
     vertices.push(1.0);
     vertices.push(0.0);
+}
+
+fn cast_rays(player: player::Player) {
+    let mut r: i32;
+    let mut mx: i32;
+    let mut my: i32;
+    let mut mp: i32;
+    let mut dof: i32;
+
+    let mut rx: f32;
+    let mut ry: f32;
+    let mut xo: f32;
+    let mut yo: f32;
+    let mut ra: f32 = player.get_dir();
+
+    dof = 0;
+    let a_tan: f32 = -1.0 / ra.tan();
+
+    if ra > PI {
+        ry = 
+    }
 }
 
 struct VertexArrayWrapper {
