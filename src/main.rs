@@ -4,7 +4,13 @@ extern crate sdl2;
 use crate::window_gl::HEIGHT;
 use crate::window_gl::WIDTH;
 use crate::window_gl::MAP;
+use draw_gl::get_x;
+use draw_gl::get_y;
 use sdl2::keyboard::Scancode;
+use window_gl::MAP_S;
+use window_gl::MAP_X;
+use window_gl::MAP_Y;
+use window_gl::single_index_map;
 use std::f32::consts::PI;
 use std::ffi::CString;
 
@@ -13,6 +19,7 @@ pub mod draw_gl;
 pub mod window_gl;
 pub mod player;
 pub mod square;
+pub mod log;
 
 fn main() {
     // initialize sdl2
@@ -165,6 +172,7 @@ fn construct_vertices(player: &player::Player, mut vertices: &mut VertexArrayWra
     }
     push_player_vertices(&mut vertices, player);
     push_line_vertices(&mut vertices, player);
+    cast_rays(&mut vertices, player)
 }
 
 fn push_square_vertices(vertices: &mut VertexArrayWrapper, wall: square::Square) {
@@ -233,8 +241,8 @@ fn push_line_vertices(vertices: &mut VertexArrayWrapper, player: &player::Player
     vertices.push(0.0);
 }
 
-fn cast_rays(player: player::Player) {
-    let mut r: i32;
+fn cast_rays(vertices: &mut VertexArrayWrapper, player: &player::Player) {
+    let map = single_index_map();
     let mut mx: i32;
     let mut my: i32;
     let mut mp: i32;
@@ -244,13 +252,130 @@ fn cast_rays(player: player::Player) {
     let mut ry: f32;
     let mut xo: f32;
     let mut yo: f32;
-    let mut ra: f32 = player.get_dir();
+    let ra: f32 = player.get_dir();
 
-    dof = 0;
-    let a_tan: f32 = -1.0 / ra.tan();
+    for _r in 0..1 {
+        dof = 0;
+        let a_tan: f32 = -1.0 / ra.tan();
 
-    if ra > PI {
-        ry = 
+        if ra > PI && ra != 2.0 * PI {
+            ry = (((((player.y_pos + 4.0) / 64.0).round() as i32) * 64) as f32) - 0.0001;
+            rx = (player.y_pos + 4.0 - ry) * a_tan + player.x_pos + 4.0;
+            yo = -MAP_S as f32;
+            xo = -yo * a_tan;
+        } else if ra < PI && ra != 0.0 {
+            ry = ((((player.y_pos + 4.0 / 64.0).round() as i32) * 64) as f32) + 64.0;
+            rx = (player.y_pos + 4.0 - ry) * a_tan + player.x_pos;
+            yo = MAP_S as f32;
+            xo = -yo * a_tan;
+        } else {
+            if ra == 0.0 || ra == 2.0 * PI {
+                rx = player.x_pos + 4.0 + 1024.0;
+                ry = player.y_pos + 4.0;
+                yo = 0.0;
+                xo = 1024.0;
+                dof = 8;
+            } else {
+                rx = player.x_pos + 4.0 - 1024.0;
+                ry = player.y_pos + 4.0;
+                yo = 0.0;
+                xo = -1024.0;
+                dof = 8;
+            }
+        }
+
+        while dof < 8 {
+            mx = (rx as i32) / MAP_S;
+            my = (ry as i32) / MAP_S;
+            mp = my * MAP_X + mx;
+
+            log::log_h_ray(mx, my, mp, dof, a_tan, ra, rx, ry, xo, yo);
+
+            if mp < MAP_X * MAP_Y && mp >= 0 && map[mp as usize] == 1 {
+                dof = 8;
+            } else {
+                rx += xo;
+                ry += yo;
+                dof += 1;
+            }
+        }
+
+        log::log_ray_vertices(player, rx, ry);
+
+        vertices.push(player.get_player_x(4.0));
+        vertices.push(player.get_player_y(4.0));
+        vertices.push(0.0);
+        vertices.push(0.0);
+        vertices.push(1.0);
+        vertices.push(0.0);
+        vertices.push(get_x(rx, WIDTH));
+        vertices.push(get_y(ry, HEIGHT));
+        vertices.push(0.0);
+        vertices.push(0.0);
+        vertices.push(1.0);
+        vertices.push(0.0);
+
+        dof = 0;
+        let n_tan: f32 = -ra.tan();
+        const P2: f32 = PI / 2.0;
+        const P3: f32 = (3.0 * PI) / 2.0;
+
+        if ra > P2 && ra < P3 && ra != P2 {
+            rx = (((((player.x_pos + 4.0) / 64.0).round() as i32) * 64) as f32) - 0.0001;
+            ry = (player.x_pos + 4.0 - rx) * n_tan + player.y_pos + 4.0;
+            xo = -MAP_S as f32;
+            yo = -xo * n_tan;
+        } else if ra < P2 || (ra > P3 && ra != P3) {
+            rx = (((((player.x_pos + 4.0) / 64.0).round() as i32) * 64) as f32) + 64.0;
+            ry = (player.x_pos + 4.0 - rx) * n_tan + player.y_pos + 4.0;
+            xo = MAP_S as f32;
+            yo = -xo * n_tan;
+        } else {
+            if ra == P2 {
+                ry = player.y_pos + 4.0 + 1024.0;
+                rx = player.x_pos + 4.0;
+                xo = 0.0;
+                yo = 1024.0;
+                dof = 8;
+            } else {
+                ry = player.y_pos + 4.0 - 1024.0;
+                rx = player.x_pos + 4.0;
+                xo = 0.0;
+                yo = -1024.0;
+                dof = 8;
+            }
+        }
+
+        while dof < 8 {
+            mx = (rx as i32) / MAP_S;
+            my = (ry as i32) / MAP_S;
+            mp = my * MAP_X + mx;
+
+            log::log_v_ray(mx, my, mp, dof, n_tan, ra, rx, ry, xo, yo);
+
+            if mp < MAP_X * MAP_Y && mp >= 0 && map[mp as usize] == 1 {
+                dof = 8;
+            } else {
+                rx += xo;
+                ry += yo;
+                dof += 1;
+            }
+        }
+
+        log::log_ray_vertices(player, rx, ry);
+
+        vertices.push(player.get_player_x(4.0));
+        vertices.push(player.get_player_y(4.0));
+        vertices.push(0.0);
+        vertices.push(1.0);
+        vertices.push(0.0);
+        vertices.push(0.0);
+        vertices.push(get_x(rx, WIDTH));
+        vertices.push(get_y(ry, HEIGHT));
+        vertices.push(0.0);
+        vertices.push(1.0);
+        vertices.push(0.0);
+        vertices.push(0.0);
     }
 }
 
