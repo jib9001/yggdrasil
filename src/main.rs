@@ -254,49 +254,64 @@ fn cast_rays(vertices: &mut VertexArrayWrapper, player: &player::Player) {
     let mut yo: f32;
     let ra: f32 = player.get_dir();
 
+    log::log_player_pos(player);
+
     for _r in 0..1 {
         dof = 0;
         let a_tan: f32 = -1.0 / ra.tan();
 
-        if ra > PI && ra != 2.0 * PI {
+        // If looking down
+        if ra > PI && ra < 2.0 * PI {
             ry = (((((player.y_pos + 4.0) / 64.0).round() as i32) * 64) as f32) - 0.0001;
             rx = (player.y_pos + 4.0 - ry) * a_tan + player.x_pos + 4.0;
             yo = -MAP_S as f32;
             xo = -yo * a_tan;
-        } else if ra < PI && ra != 0.0 {
+        } else if
+            // if looking up
+            ra < PI &&
+            ra > 0.0
+        {
             ry = ((((player.y_pos + 4.0 / 64.0).round() as i32) * 64) as f32) + 64.0;
             rx = (player.y_pos + 4.0 - ry) * a_tan + player.x_pos;
             yo = MAP_S as f32;
             xo = -yo * a_tan;
         } else {
             if ra == 0.0 || ra == 2.0 * PI {
-                rx = player.x_pos + 4.0 + 1024.0;
+                rx = player.x_pos + 4.0 + 100.0;
                 ry = player.y_pos + 4.0;
                 yo = 0.0;
-                xo = 1024.0;
+                xo = 100.0;
+                dof = 8;
+            } else if ra == PI {
+                rx = player.x_pos + 4.0 - 100.0;
+                ry = player.y_pos + 4.0;
+                yo = 0.0;
+                xo = -100.0;
                 dof = 8;
             } else {
-                rx = player.x_pos + 4.0 - 1024.0;
+                rx = player.x_pos + 4.0 - 100.0;
                 ry = player.y_pos + 4.0;
                 yo = 0.0;
-                xo = -1024.0;
+                xo = -100.0;
                 dof = 8;
             }
         }
 
+        mx = (rx as i32) / MAP_S;
+        my = (ry as i32) / MAP_S;
+        mp = my * MAP_X + mx;
+
         while dof < 8 {
-            mx = (rx as i32) / MAP_S;
-            my = (ry as i32) / MAP_S;
-            mp = my * MAP_X + mx;
-
-            log::log_h_ray(mx, my, mp, dof, a_tan, ra, rx, ry, xo, yo);
-
             if mp < MAP_X * MAP_Y && mp >= 0 && map[mp as usize] == 1 {
                 dof = 8;
             } else {
                 rx += xo;
                 ry += yo;
                 dof += 1;
+            }
+
+            if dof == 8 {
+                log::log_h_ray(mx, my, mp, dof, a_tan, ra, rx, ry, xo, yo);
             }
         }
 
@@ -320,45 +335,43 @@ fn cast_rays(vertices: &mut VertexArrayWrapper, player: &player::Player) {
         const P2: f32 = PI / 2.0;
         const P3: f32 = (3.0 * PI) / 2.0;
 
-        if ra > P2 && ra < P3 && ra != P2 {
+        if ra > P2 && ra < P3 {
             rx = (((((player.x_pos + 4.0) / 64.0).round() as i32) * 64) as f32) - 0.0001;
             ry = (player.x_pos + 4.0 - rx) * n_tan + player.y_pos + 4.0;
             xo = -MAP_S as f32;
             yo = -xo * n_tan;
-        } else if ra < P2 || (ra > P3 && ra != P3) {
+        } else if ra < P2 || ra > P3 {
             rx = (((((player.x_pos + 4.0) / 64.0).round() as i32) * 64) as f32) + 64.0;
             ry = (player.x_pos + 4.0 - rx) * n_tan + player.y_pos + 4.0;
             xo = MAP_S as f32;
             yo = -xo * n_tan;
         } else {
             if ra == P2 {
-                ry = player.y_pos + 4.0 + 1024.0;
+                ry = player.y_pos + 4.0 + 100.0;
                 rx = player.x_pos + 4.0;
                 xo = 0.0;
-                yo = 1024.0;
+                yo = 100.0;
                 dof = 8;
             } else {
-                ry = player.y_pos + 4.0 - 1024.0;
+                ry = player.y_pos + 4.0 - 100.0;
                 rx = player.x_pos + 4.0;
                 xo = 0.0;
-                yo = -1024.0;
+                yo = -100.0;
                 dof = 8;
             }
         }
 
         while dof < 8 {
-            mx = (rx as i32) / MAP_S;
-            my = (ry as i32) / MAP_S;
-            mp = my * MAP_X + mx;
-
-            log::log_v_ray(mx, my, mp, dof, n_tan, ra, rx, ry, xo, yo);
-
             if mp < MAP_X * MAP_Y && mp >= 0 && map[mp as usize] == 1 {
                 dof = 8;
             } else {
                 rx += xo;
                 ry += yo;
                 dof += 1;
+            }
+
+            if dof == 8 {
+                log::log_v_ray(mx, my, mp, dof, n_tan, ra, rx, ry, xo, yo);
             }
         }
 
