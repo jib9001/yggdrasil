@@ -22,7 +22,7 @@ pub mod square;
 pub mod window_gl;
 
 fn main() {
-    let mut isLog = 0;
+    let mut is_log;
     // initialize sdl2
     let sdl = sdl2::init().unwrap();
     // find the C opengl libraries
@@ -85,13 +85,13 @@ fn main() {
     // main loop
     let mut event_pump = sdl.event_pump().unwrap();
     let mut i: i32 = 0;
-    //let mut isLog :i32 = 0;
+    //let mut is_log :i32 = 0;
     'main: loop {
         i += 1;
         if i % 30 == 0 {
-            isLog = 1;
+            is_log = 1;
         } else {
-            isLog = 0;
+            is_log = 0;
         }
 
         for event in event_pump.poll_iter() {
@@ -107,7 +107,7 @@ fn main() {
         let mut vertices: VertexArrayWrapper = VertexArrayWrapper::new();
 
         player = get_input(&event_pump, player);
-        construct_vertices(&player, &mut vertices, isLog);
+        construct_vertices(&player, &mut vertices, is_log);
 
         bab.set_buffers(&vertices.points());
         bab.set_vertex_attribs(3, 6, 3);
@@ -163,7 +163,7 @@ fn get_input(event_pump: &sdl2::EventPump, mut player: player::Player) -> player
     return player;
 }
 
-fn construct_vertices(player: &player::Player, mut vertices: &mut VertexArrayWrapper, isLog: i32) {
+fn construct_vertices(player: &player::Player, mut vertices: &mut VertexArrayWrapper, is_log: i32) {
     for i in 0..=7 {
         for ii in 0..=7 {
             if MAP[i][ii] == 1 {
@@ -181,7 +181,7 @@ fn construct_vertices(player: &player::Player, mut vertices: &mut VertexArrayWra
     }
     push_player_vertices(&mut vertices, player);
     push_line_vertices(&mut vertices, player);
-    cast_rays(&mut vertices, player, isLog);
+    cast_rays(&mut vertices, player, is_log);
 }
 
 fn push_square_vertices(vertices: &mut VertexArrayWrapper, wall: square::Square) {
@@ -250,19 +250,19 @@ fn push_line_vertices(vertices: &mut VertexArrayWrapper, player: &player::Player
     vertices.push(0.0);
 }
 
-fn cast_rays(vertices: &mut VertexArrayWrapper, player: &player::Player, isLog: i32) {
+fn cast_rays(vertices: &mut VertexArrayWrapper, player: &player::Player, is_log: i32) {
     let map = single_index_map();
-    let DR: f32 = 0.0174333;
-    let mut mx: i32 = 0;
-    let mut my: i32 = 0;
-    let mut mp: i32 = 0;
+    let dr: f32 = 0.0174333;
+    let mut mx: i32;
+    let mut my: i32;
+    let mut mp: i32;
     let mut dof: i32;
 
     let mut rx: f32;
     let mut ry: f32;
     let mut xo: f32;
     let mut yo: f32;
-    let mut ra: f32 = player.get_dir() - DR * 30.0;
+    let mut ra: f32 = player.get_dir() - dr * 30.0;
 
     for _r in 0..60 {
         dof = 0;
@@ -327,7 +327,7 @@ fn cast_rays(vertices: &mut VertexArrayWrapper, player: &player::Player, isLog: 
             }
         }
 
-        if (isLog == 1) {
+        if is_log == 1 {
             log::log_h_ray(mx, my, mp, dof, a_tan, ra, rx, ry, xo, yo);
 
             log::log_ray_vertices(player, rx, ry);
@@ -394,7 +394,7 @@ fn cast_rays(vertices: &mut VertexArrayWrapper, player: &player::Player, isLog: 
             }
         }
 
-        if (isLog == 1) {
+        if is_log == 1 {
             log::log_v_ray(mx, my, mp, dof, n_tan, ra, rx, ry, xo, yo);
 
             log::log_ray_vertices(player, rx, ry);
@@ -413,7 +413,7 @@ fn cast_rays(vertices: &mut VertexArrayWrapper, player: &player::Player, isLog: 
         vertices.push(0.0);
         vertices.push(0.0);
 
-        ra += DR;
+        ra += dr;
     }
 }
 
