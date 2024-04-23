@@ -75,3 +75,11 @@ pub fn log_ray_vertices(player: &Player, rx: f32, ry: f32) {
     println!("end vertices");
     println!("================");
 }
+
+pub fn log_player_pos(player: &Player) {
+    println!("-----------------------");
+    println!("player position");
+    println!("player x => {}", player.x_pos);
+    println!("player y => {}", player.y_pos);
+    println!("-----------------------");
+}

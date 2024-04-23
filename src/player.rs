@@ -2,6 +2,7 @@ use crate::draw_gl::get_y;
 use crate::draw_gl::get_x;
 use crate::window_gl::HEIGHT;
 use crate::window_gl::WIDTH;
+use std::f32::consts::PI;
 
 pub struct Player {
     pub x_pos: f32,
@@ -59,7 +60,10 @@ impl Player {
         self.set_conrners();
     }
 
-    pub fn update_dir(&mut self, new_dir: f32) {
+    pub fn update_dir(&mut self, mut new_dir: f32) {
+        while new_dir > 2.0 * PI {
+            new_dir -= 2.0 * PI;
+        }
         self.player_dir = new_dir;
     }
 
@@ -69,7 +73,7 @@ impl Player {
 
     pub fn update_y_dir(&mut self, new_dir: f32) {
         self.y_dir = new_dir;
-    }    
+    }
 
     pub fn get_dir(&self) -> f32 {
         return self.player_dir;
