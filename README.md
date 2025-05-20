@@ -14,12 +14,6 @@ Yggdrasil is a 2D raycasting engine written in Rust, utilizing SDL2 and OpenGL f
 
 Before building and running the project, ensure you have the following installed:
 
-### Rust
-Install Rust via [rustup](https://rustup.rs/):
-```bash
-curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-```
-
 ### SDL2
 Install SDL2 development libraries:
 
