@@ -1,6 +1,8 @@
-extern crate gl;
-extern crate sdl2;
+// Import external crates
+extern crate gl; // OpenGL bindings
+extern crate sdl2; // SDL2 bindings
 
+// Import constants and utilities from other modules
 use crate::window_gl::HEIGHT;
 use crate::window_gl::MAP;
 use crate::window_gl::WIDTH;
@@ -14,6 +16,7 @@ use window_gl::MAP_S;
 use window_gl::MAP_X;
 use window_gl::MAP_Y;
 
+// Declare submodules
 pub mod draw_gl;
 pub mod log;
 pub mod player;
@@ -22,7 +25,8 @@ pub mod square;
 pub mod window_gl;
 
 fn main() {
-    let mut _is_log;
+    let mut _is_log; // Variable to toggle logging
+
     // Initialize SDL2
     let sdl = sdl2::init().unwrap();
     // Initialize the video subsystem
@@ -249,7 +253,7 @@ fn push_line_vertices(vertices: &mut VertexArrayWrapper, player: &player::Player
 // Cast rays for rendering
 fn cast_rays(vertices: &mut VertexArrayWrapper, player: &player::Player, _is_log: i32) {
     let map = single_index_map();
-    let dr: f32 = 0.0174333;
+    let dr: f32 = 0.0174333; // Ray angle increment
     let mut mx: i32;
     let mut my: i32;
     let mut _mp: i32;
@@ -259,7 +263,7 @@ fn cast_rays(vertices: &mut VertexArrayWrapper, player: &player::Player, _is_log
     let mut ry: f32;
     let mut xo: f32;
     let mut yo: f32;
-    let mut ra: f32 = player.get_dir() - dr * 30.0;
+    let mut ra: f32 = player.get_dir() - dr * 30.0; // Start angle for rays
 
     for _r in 0..60 {
         // Normalize ra
