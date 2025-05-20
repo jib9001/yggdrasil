@@ -22,20 +22,18 @@ pub mod square;
 pub mod window_gl;
 
 fn main() {
-    let mut is_log;
-    // initialize sdl2
+    let mut _is_log;
+    // Initialize SDL2
     let sdl = sdl2::init().unwrap();
-    // find the C opengl libraries
+    // Initialize the video subsystem
     let video_subsystem = sdl.video().unwrap();
 
+    // Configure OpenGL attributes
     let gl_attr = video_subsystem.gl_attr();
+    gl_attr.set_context_profile(sdl2::video::GLProfile::Core); // Use core profile
+    gl_attr.set_context_version(4, 1); // OpenGL version 4.1
 
-    // set opengl profile to core for current feature set
-    gl_attr.set_context_profile(sdl2::video::GLProfile::Core);
-    // specify opengl version 4.1
-    gl_attr.set_context_version(4, 1);
-
-    // create window object, needs opengl context
+    // Create a window with OpenGL context
     let window = video_subsystem
         .window("Game", WIDTH, HEIGHT)
         .opengl()
@@ -43,107 +41,107 @@ fn main() {
         .build()
         .unwrap();
 
-    // create opengl context
+    // Create OpenGL context
     let _gl_context = window.gl_create_context().unwrap();
-    // I think this ititializes opengl?
+    // Load OpenGL functions
     let _gl =
         gl::load_with(|s| video_subsystem.gl_get_proc_address(s) as *const std::os::raw::c_void);
 
-    // compile vertex shader "triangle.vert"
+    // Compile shaders
     let vert_shader = render_gl::Shader::from_vert_source(
         &CString::new(include_str!("./shaders/triangle.vert")).unwrap(),
     )
     .unwrap();
-
-    // compile fragment shader "triangle.frag"
     let frag_shader = render_gl::Shader::from_frag_source(
         &CString::new(include_str!("./shaders/triangle.frag")).unwrap(),
     )
     .unwrap();
 
-    // create shader program and link compiled shaders to it
+    // Link shaders into a program
     let shader_program = render_gl::Program::from_shaders(&[vert_shader, frag_shader]).unwrap();
 
-    // set up shared state for window
+    // Set up OpenGL state
     unsafe {
-        gl::Viewport(0, 0, WIDTH as i32, HEIGHT as i32);
-        gl::ClearColor(0.3, 0.3, 0.5, 1.0);
+        gl::Viewport(0, 0, WIDTH as i32, HEIGHT as i32); // Set viewport size
+        gl::ClearColor(0.3, 0.3, 0.5, 1.0); // Set background color
     }
 
-    //create player
+    // Create the player object
     let mut player: player::Player = player::Player::new(200.0, 200.0);
 
-    // create vertex buffer object for squares
+    // Create buffer objects for rendering
     let vbo_squares: gl::types::GLuint = 0;
-    // create vertex attribute object for sauares
     let vao_squares: gl::types::GLuint = 0;
-
-    // object for binding arrays to the
     let mut bab: draw_gl::BufferArrayBinder =
         draw_gl::BufferArrayBinder::new(vao_squares, vbo_squares);
 
-    // main loop
+    // Main game loop
     let mut event_pump = sdl.event_pump().unwrap();
     let mut i: i32 = 0;
-    //let mut is_log :i32 = 0;
     'main: loop {
+        // Toggle logging every 30 frames
         i += 1;
         if i % 30 == 0 {
-            is_log = 1;
+            _is_log = 1;
         } else {
-            is_log = 0;
+            _is_log = 0;
         }
 
+        // Handle events
         for event in event_pump.poll_iter() {
             match event {
                 sdl2::event::Event::Quit { .. } => {
-                    break 'main;
+                    break 'main; // Exit the game loop on quit
                 }
                 _ => {}
             }
         }
 
-        // create vertex array wrapper
+        // Create a vertex array wrapper
         let mut vertices: VertexArrayWrapper = VertexArrayWrapper::new();
 
+        // Process player input
         player = get_input(&event_pump, player);
-        construct_vertices(&player, &mut vertices, is_log);
 
+        // Construct vertices for rendering
+        construct_vertices(&player, &mut vertices, _is_log);
+
+        // Bind vertex data to buffers
         bab.set_buffers(&vertices.points());
         bab.set_vertex_attribs(3, 6, 3);
 
-        // create opengl buffer from buffer object
+        // Clear the screen
         unsafe {
             gl::Clear(gl::COLOR_BUFFER_BIT);
         }
 
+        // Use the shader program
         shader_program.set_used();
 
+        // Draw triangles and lines
         bab.draw_arrays(gl::TRIANGLES, 6, 0, vertices.triangle_end() as i32);
         bab.draw_arrays(gl::LINES, 6, 0, vertices.len() as i32);
 
+        // Swap the window buffer
         window.gl_swap_window();
     }
 }
 
+// Handle player input
 fn get_input(event_pump: &sdl2::EventPump, mut player: player::Player) -> player::Player {
     if event_pump.keyboard_state().is_scancode_pressed(Scancode::A) {
         player.update_dir(player.get_dir() - 0.1);
-
         if player.get_dir() < 0.0 {
             player.update_dir(player.get_dir() + 2.0 * PI);
         }
-
         player.update_x_dir(player.get_dir().cos());
         player.update_y_dir(player.get_dir().sin());
     }
     if event_pump.keyboard_state().is_scancode_pressed(Scancode::D) {
         player.update_dir(player.get_dir() + 0.1);
-
         if player.get_dir() > 2.0 * PI {
             player.update_dir(player.get_dir() - 2.0 * PI);
         }
-
         player.update_x_dir(player.get_dir().cos());
         player.update_y_dir(player.get_dir().sin());
     }
@@ -159,11 +157,11 @@ fn get_input(event_pump: &sdl2::EventPump, mut player: player::Player) -> player
             player.y_pos - player.get_y_dir() * 5.0,
         );
     }
-
     return player;
 }
 
-fn construct_vertices(player: &player::Player, mut vertices: &mut VertexArrayWrapper, is_log: i32) {
+// Construct vertices for rendering
+fn construct_vertices(player: &player::Player, mut vertices: &mut VertexArrayWrapper, _is_log: i32) {
     for i in 0..=7 {
         for ii in 0..=7 {
             if MAP[i][ii] == 1 {
@@ -181,12 +179,12 @@ fn construct_vertices(player: &player::Player, mut vertices: &mut VertexArrayWra
     }
     push_player_vertices(&mut vertices, player);
     push_line_vertices(&mut vertices, player);
-    cast_rays(&mut vertices, player, is_log);
+    cast_rays(&mut vertices, player, _is_log);
 }
 
+// Push square vertices to the vertex array
 fn push_square_vertices(vertices: &mut VertexArrayWrapper, wall: square::Square) {
     let points: [[f32; 3]; 4] = wall.get_vertices();
-
     for i in 0..=2 {
         for num in points[i] {
             vertices.push(num);
@@ -195,7 +193,6 @@ fn push_square_vertices(vertices: &mut VertexArrayWrapper, wall: square::Square)
             vertices.push(num);
         }
     }
-
     for i in 1..=3 {
         for num in points[i] {
             vertices.push(num);
@@ -206,6 +203,7 @@ fn push_square_vertices(vertices: &mut VertexArrayWrapper, wall: square::Square)
     }
 }
 
+// Push player vertices to the vertex array
 fn push_player_vertices(vertices: &mut VertexArrayWrapper, player: &player::Player) {
     let points: [[f32; 3]; 4] = [
         player.tl_point,
@@ -213,7 +211,6 @@ fn push_player_vertices(vertices: &mut VertexArrayWrapper, player: &player::Play
         player.bl_point,
         player.br_point,
     ];
-
     for i in 0..=2 {
         for num in points[i] {
             vertices.push(num);
@@ -222,7 +219,6 @@ fn push_player_vertices(vertices: &mut VertexArrayWrapper, player: &player::Play
             vertices.push(num);
         }
     }
-
     for i in 1..=3 {
         for num in points[i] {
             vertices.push(num);
@@ -231,10 +227,10 @@ fn push_player_vertices(vertices: &mut VertexArrayWrapper, player: &player::Play
             vertices.push(num);
         }
     }
-
     vertices.set_triangle_end(vertices.len());
 }
 
+// Push line vertices to the vertex array
 fn push_line_vertices(vertices: &mut VertexArrayWrapper, player: &player::Player) {
     vertices.push(player.get_player_x(4.0));
     vertices.push(player.get_player_y(4.0));
@@ -250,70 +246,75 @@ fn push_line_vertices(vertices: &mut VertexArrayWrapper, player: &player::Player
     vertices.push(0.0);
 }
 
-fn cast_rays(vertices: &mut VertexArrayWrapper, player: &player::Player, is_log: i32) {
+// Cast rays for rendering
+fn cast_rays(vertices: &mut VertexArrayWrapper, player: &player::Player, _is_log: i32) {
     let map = single_index_map();
-    let dr: f32 = 0.0174333;
+    let dr: f32 = 0.0174333; // Ray angle increment
     let mut mx: i32;
     let mut my: i32;
-    let mut mp: i32;
     let mut dof: i32;
 
-    let mut rx: f32;
-    let mut ry: f32;
-    let mut xo: f32;
-    let mut yo: f32;
-    let mut ra: f32 = player.get_dir() - dr * 30.0;
+    let mut ra: f32 = player.get_dir() - dr * 30.0; // Start angle for rays
 
     for _r in 0..60 {
         dof = 0;
-        let a_tan: f32 = -1.0 / ra.tan();
+        let a_tan: f32 = -1.0 / ra.tan(); // Inverse tangent for horizontal rays
 
-        // If looking down
+        // Normalize ra
+        if ra < 0.0 {
+            ra += 2.0 * PI;
+        } else if ra > 2.0 * PI {
+            ra -= 2.0 * PI;
+        }
+
+        // Horizontal ray logic
+        let (mut rx, mut ry, mut xo, mut yo) = (0.0, 0.0, 0.0, 0.0);
         if ra > PI && ra < 2.0 * PI {
-            ry = (((((player.y_pos + 4.0) / 64.0).round() as i32) * 64) as f32) - 0.0001;
+            // Looking down
+            ry = (((player.y_pos + 4.0) / MAP_S as f32).floor() * MAP_S as f32) - 0.0001;
             rx = (player.y_pos + 4.0 - ry) * a_tan + player.x_pos + 4.0;
             yo = -MAP_S as f32;
             xo = -yo * a_tan;
-        } else if
-            // if looking up
-            ra < PI &&
-            ra > 0.0
-        {
-            ry = ((((player.y_pos + 4.0 / 64.0).round() as i32) * 64) as f32) + 64.0;
-            rx = (player.y_pos + 4.0 - ry) * a_tan + player.x_pos;
+        } else if ra < PI && ra > 0.0 {
+            // Looking up
+            ry = (((player.y_pos + 4.0) / MAP_S as f32).floor() * MAP_S as f32) + MAP_S as f32;
+            rx = (player.y_pos + 4.0 - ry) * a_tan + player.x_pos + 4.0;
             yo = MAP_S as f32;
             xo = -yo * a_tan;
-        } else {
-            if ra == 0.0 || ra == 2.0 * PI {
-                rx = player.x_pos + 4.0 + 100.0;
-                ry = player.y_pos + 4.0;
-                yo = 0.0;
-                xo = 100.0;
-                dof = 8;
-            } else if ra == PI {
-                rx = player.x_pos + 4.0 - 100.0;
-                ry = player.y_pos + 4.0;
-                yo = 0.0;
-                xo = -100.0;
-                dof = 8;
-            } else {
-                rx = player.x_pos + 4.0 - 100.0;
-                ry = player.y_pos + 4.0;
-                yo = 0.0;
-                xo = -100.0;
-                dof = 8;
-            }
+        } else if ra == 0.0 || ra == 2.0 * PI {
+            rx = player.x_pos + 4.0 + 100.0;
+            ry = player.y_pos + 4.0;
+            xo = 100.0;
+            yo = 0.0;
+            dof = 8;
+        } else if ra == PI {
+            rx = player.x_pos + 4.0 - 100.0;
+            ry = player.y_pos + 4.0;
+            xo = -100.0;
+            yo = 0.0;
+            dof = 8;
+        }
+
+        // Add epsilon to prevent floating-point precision issues
+        let epsilon = 0.0001;
+        if ra > PI && ra < 2.0 * PI {
+            rx -= epsilon;
+        } else if ra < PI {
+            rx += epsilon;
         }
 
         mx = (rx as i32) / MAP_S;
         my = (ry as i32) / MAP_S;
-        mp = my * MAP_X + mx;
 
         while dof < 8 {
             mx = (rx as i32) / MAP_S;
             my = (ry as i32) / MAP_S;
-            mp = my * MAP_X + mx;
 
+            if mx < 0 || mx >= MAP_X || my < 0 || my >= MAP_Y {
+                break;
+            }
+
+            let mp = my * MAP_X + mx; // Calculate map position
             if mp < MAP_X * MAP_Y && mp >= 0 && map[mp as usize] == 1 {
                 dof = 8;
             } else {
@@ -321,17 +322,8 @@ fn cast_rays(vertices: &mut VertexArrayWrapper, player: &player::Player, is_log:
                 ry += yo;
                 dof += 1;
             }
-
-            if dof == 8 {
-                log::log_h_ray(mx, my, mp, dof, a_tan, ra, rx, ry, xo, yo);
-            }
         }
 
-        if is_log == 1 {
-            log::log_h_ray(mx, my, mp, dof, a_tan, ra, rx, ry, xo, yo);
-
-            log::log_ray_vertices(player, rx, ry);
-        }
         vertices.push(player.get_player_x(4.0));
         vertices.push(player.get_player_y(4.0));
         vertices.push(0.0);
@@ -345,78 +337,11 @@ fn cast_rays(vertices: &mut VertexArrayWrapper, player: &player::Player, is_log:
         vertices.push(1.0);
         vertices.push(0.0);
 
-        dof = 0;
-        let n_tan: f32 = -ra.tan();
-        const P2: f32 = PI / 2.0;
-        const P3: f32 = (3.0 * PI) / 2.0;
-
-        if ra > P2 && ra < P3 {
-            rx = (((((player.x_pos + 4.0) / 64.0).round() as i32) * 64) as f32) - 0.0001;
-            ry = (player.x_pos + 4.0 - rx) * n_tan + player.y_pos + 4.0;
-            xo = -MAP_S as f32;
-            yo = -xo * n_tan;
-        } else if ra < P2 || ra > P3 {
-            rx = (((((player.x_pos + 4.0) / 64.0).round() as i32) * 64) as f32) + 64.0;
-            ry = (player.x_pos + 4.0 - rx) * n_tan + player.y_pos + 4.0;
-            xo = MAP_S as f32;
-            yo = -xo * n_tan;
-        } else {
-            if ra == P2 {
-                ry = player.y_pos + 4.0 + 100.0;
-                rx = player.x_pos + 4.0;
-                xo = 0.0;
-                yo = 100.0;
-                dof = 8;
-            } else {
-                ry = player.y_pos + 4.0 - 100.0;
-                rx = player.x_pos + 4.0;
-                xo = 0.0;
-                yo = -100.0;
-                dof = 8;
-            }
-        }
-
-        while dof < 8 {
-            mx = (rx as i32) / MAP_S;
-            my = (ry as i32) / MAP_S;
-            mp = my * MAP_X + mx;
-
-            if mp < MAP_X * MAP_Y && mp >= 0 && map[mp as usize] == 1 {
-                dof = 8;
-            } else {
-                rx += xo;
-                ry += yo;
-                dof += 1;
-            }
-
-            if dof == 8 {
-                log::log_v_ray(mx, my, mp, dof, n_tan, ra, rx, ry, xo, yo);
-            }
-        }
-
-        if is_log == 1 {
-            log::log_v_ray(mx, my, mp, dof, n_tan, ra, rx, ry, xo, yo);
-
-            log::log_ray_vertices(player, rx, ry);
-        }
-
-        vertices.push(player.get_player_x(4.0));
-        vertices.push(player.get_player_y(4.0));
-        vertices.push(0.0);
-        vertices.push(1.0);
-        vertices.push(0.0);
-        vertices.push(0.0);
-        vertices.push(get_x(rx, WIDTH));
-        vertices.push(get_y(ry, HEIGHT));
-        vertices.push(0.0);
-        vertices.push(1.0);
-        vertices.push(0.0);
-        vertices.push(0.0);
-
-        ra += dr;
+        ra += dr; // Increment ray angle
     }
 }
 
+// Vertex array wrapper for managing vertex data
 struct VertexArrayWrapper {
     points: Vec<f32>,
     triangle_end: usize,
@@ -426,7 +351,6 @@ impl VertexArrayWrapper {
     pub fn new() -> VertexArrayWrapper {
         let points = Vec::new();
         let triangle_end = 0;
-
         VertexArrayWrapper {
             points,
             triangle_end,
