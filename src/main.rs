@@ -249,17 +249,19 @@ fn push_line_vertices(vertices: &mut VertexArrayWrapper, player: &player::Player
 // Cast rays for rendering
 fn cast_rays(vertices: &mut VertexArrayWrapper, player: &player::Player, _is_log: i32) {
     let map = single_index_map();
-    let dr: f32 = 0.0174333; // Ray angle increment
+    let dr: f32 = 0.0174333;
     let mut mx: i32;
     let mut my: i32;
+    let mut _mp: i32;
     let mut dof: i32;
 
-    let mut ra: f32 = player.get_dir() - dr * 30.0; // Start angle for rays
+    let mut rx: f32;
+    let mut ry: f32;
+    let mut xo: f32;
+    let mut yo: f32;
+    let mut ra: f32 = player.get_dir() - dr * 30.0;
 
     for _r in 0..60 {
-        dof = 0;
-        let a_tan: f32 = -1.0 / ra.tan(); // Inverse tangent for horizontal rays
-
         // Normalize ra
         if ra < 0.0 {
             ra += 2.0 * PI;
@@ -267,32 +269,44 @@ fn cast_rays(vertices: &mut VertexArrayWrapper, player: &player::Player, _is_log
             ra -= 2.0 * PI;
         }
 
-        // Horizontal ray logic
-        let (mut rx, mut ry, mut xo, mut yo) = (0.0, 0.0, 0.0, 0.0);
+        dof = 0;
+        let a_tan: f32 = -1.0 / ra.tan();
+
+        // If looking down
         if ra > PI && ra < 2.0 * PI {
-            // Looking down
             ry = (((player.y_pos + 4.0) / MAP_S as f32).floor() * MAP_S as f32) - 0.0001;
             rx = (player.y_pos + 4.0 - ry) * a_tan + player.x_pos + 4.0;
             yo = -MAP_S as f32;
             xo = -yo * a_tan;
-        } else if ra < PI && ra > 0.0 {
-            // Looking up
+        } else if
+            // if looking up
+            ra < PI &&
+            ra > 0.0
+        {
             ry = (((player.y_pos + 4.0) / MAP_S as f32).floor() * MAP_S as f32) + MAP_S as f32;
             rx = (player.y_pos + 4.0 - ry) * a_tan + player.x_pos + 4.0;
             yo = MAP_S as f32;
             xo = -yo * a_tan;
-        } else if ra == 0.0 || ra == 2.0 * PI {
-            rx = player.x_pos + 4.0 + 100.0;
-            ry = player.y_pos + 4.0;
-            xo = 100.0;
-            yo = 0.0;
-            dof = 8;
-        } else if ra == PI {
-            rx = player.x_pos + 4.0 - 100.0;
-            ry = player.y_pos + 4.0;
-            xo = -100.0;
-            yo = 0.0;
-            dof = 8;
+        } else {
+            if ra == 0.0 || ra == 2.0 * PI {
+                rx = player.x_pos + 4.0 + 100.0;
+                ry = player.y_pos + 4.0;
+                yo = 0.0;
+                xo = 100.0;
+                dof = 8;
+            } else if ra == PI {
+                rx = player.x_pos + 4.0 - 100.0;
+                ry = player.y_pos + 4.0;
+                yo = 0.0;
+                xo = -100.0;
+                dof = 8;
+            } else {
+                rx = player.x_pos + 4.0 - 100.0;
+                ry = player.y_pos + 4.0;
+                yo = 0.0;
+                xo = -100.0;
+                dof = 8;
+            }
         }
 
         // Add epsilon to prevent floating-point precision issues
@@ -305,17 +319,19 @@ fn cast_rays(vertices: &mut VertexArrayWrapper, player: &player::Player, _is_log
 
         mx = (rx as i32) / MAP_S;
         my = (ry as i32) / MAP_S;
+        _mp = my * MAP_X + mx;
 
         while dof < 8 {
             mx = (rx as i32) / MAP_S;
             my = (ry as i32) / MAP_S;
+            _mp = my * MAP_X + mx;
 
+            // Map boundary checks
             if mx < 0 || mx >= MAP_X || my < 0 || my >= MAP_Y {
                 break;
             }
 
-            let mp = my * MAP_X + mx; // Calculate map position
-            if mp < MAP_X * MAP_Y && mp >= 0 && map[mp as usize] == 1 {
+            if _mp < MAP_X * MAP_Y && _mp >= 0 && map[_mp as usize] == 1 {
                 dof = 8;
             } else {
                 rx += xo;
@@ -323,7 +339,7 @@ fn cast_rays(vertices: &mut VertexArrayWrapper, player: &player::Player, _is_log
                 dof += 1;
             }
         }
-
+        
         vertices.push(player.get_player_x(4.0));
         vertices.push(player.get_player_y(4.0));
         vertices.push(0.0);
@@ -337,7 +353,70 @@ fn cast_rays(vertices: &mut VertexArrayWrapper, player: &player::Player, _is_log
         vertices.push(1.0);
         vertices.push(0.0);
 
-        ra += dr; // Increment ray angle
+        dof = 0;
+        let n_tan: f32 = -ra.tan();
+        const P2: f32 = PI / 2.0;
+        const P3: f32 = (3.0 * PI) / 2.0;
+
+        if ra > P2 && ra < P3 {
+            rx = (((player.x_pos + 4.0) / MAP_S as f32).floor() * MAP_S as f32) - 0.0001;
+            ry = (player.x_pos + 4.0 - rx) * n_tan + player.y_pos + 4.0;
+            xo = -MAP_S as f32;
+            yo = -xo * n_tan;
+        } else if ra < P2 || ra > P3 {
+            rx = (((player.x_pos + 4.0) / MAP_S as f32).floor() * MAP_S as f32) + MAP_S as f32;
+            ry = (player.x_pos + 4.0 - rx) * n_tan + player.y_pos + 4.0;
+            xo = MAP_S as f32;
+            yo = -xo * n_tan;
+        } else {
+            if ra == P2 {
+                ry = player.y_pos + 4.0 + 100.0;
+                rx = player.x_pos + 4.0;
+                xo = 0.0;
+                yo = 100.0;
+                dof = 8;
+            } else {
+                ry = player.y_pos + 4.0 - 100.0;
+                rx = player.x_pos + 4.0;
+                xo = 0.0;
+                yo = -100.0;
+                dof = 8;
+            }
+        }
+
+        while dof < 8 {
+            mx = (rx as i32) / MAP_S;
+            my = (ry as i32) / MAP_S;
+            _mp = my * MAP_X + mx;
+
+            // Map boundary checks
+            if mx < 0 || mx >= MAP_X || my < 0 || my >= MAP_Y {
+                break;
+            }
+
+            if _mp < MAP_X * MAP_Y && _mp >= 0 && map[_mp as usize] == 1 {
+                dof = 8;
+            } else {
+                rx += xo;
+                ry += yo;
+                dof += 1;
+            }
+        }
+
+        vertices.push(player.get_player_x(4.0));
+        vertices.push(player.get_player_y(4.0));
+        vertices.push(0.0);
+        vertices.push(1.0);
+        vertices.push(0.0);
+        vertices.push(0.0);
+        vertices.push(get_x(rx, WIDTH));
+        vertices.push(get_y(ry, HEIGHT));
+        vertices.push(0.0);
+        vertices.push(1.0);
+        vertices.push(0.0);
+        vertices.push(0.0);
+
+        ra += dr;
     }
 }
 
