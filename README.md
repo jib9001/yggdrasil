@@ -14,6 +14,10 @@ Yggdrasil is a 2D raycasting engine written in Rust, utilizing SDL2 and OpenGL f
 
 Before building and running the project, ensure you have the following installed:
 
+### Rust and Cargo
+
+Yggdrasil is written in Rust and uses Cargo as its build system and package manager.
+
 ### SDL2
 Install SDL2 development libraries:
 
@@ -73,6 +77,28 @@ Install OpenGL development libraries:
 
 - **Windows**:
   Use [vcpkg](https://github.com/microsoft/vcpkg) to install OpenGL or download the necessary libraries from the [official website](https://www.opengl.org/).
+
+### X11 Extension Headers (Required for SDL2 on Linux)
+
+- **Debian-based systems (Ubuntu, etc.)**:
+  ```bash
+  sudo apt-get install libxext-dev
+  ```
+
+- **Fedora**:
+  ```bash
+  sudo dnf install libXext-devel
+  ```
+
+- **Arch Linux**:
+  ```bash
+  sudo pacman -S libxext
+  ```
+
+- **OpenSUSE**:
+  ```bash
+  sudo zypper install libXext-devel
+  ```
 
 ## Building the Project
 
