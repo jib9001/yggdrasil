@@ -1,4 +1,4 @@
-pub const WIDTH: u32 = 900;
+pub const WIDTH: u32 = 1280;
 pub const HEIGHT: u32 = 700;
 
 pub const MAP_X: i32 = 8;

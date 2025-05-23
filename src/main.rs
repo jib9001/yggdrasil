@@ -27,6 +27,10 @@ pub mod window_gl;
 fn main() {
     let mut _is_log = 0; // Variable to toggle logging
 
+    let mut _pixels: [[[u8; 3]; 60]; 60];
+    let mut hrays: [f32; 60] = [0.0; 60];
+    let mut vrays: [f32; 60] = [0.0; 60];
+
     // Initialize SDL2
     let sdl = sdl2::init().unwrap();
     // Initialize the video subsystem
@@ -100,7 +104,7 @@ fn main() {
         player = get_input(&event_pump, player);
 
         // Construct vertices for rendering
-        construct_vertices(&player, &mut vertices, _is_log);
+        construct_vertices(&player, &mut vertices, &mut hrays, &mut vrays, _is_log);
 
         // Bind vertex data to buffers
         bab.set_buffers(&vertices.points());
@@ -160,6 +164,8 @@ fn get_input(event_pump: &sdl2::EventPump, mut player: player::Player) -> player
 fn construct_vertices(
     player: &player::Player,
     mut vertices: &mut VertexArrayWrapper,
+    hrays: &mut [f32; 60],
+    vrays: &mut [f32; 60],
     _is_log: i32
 ) {
     for i in 0..=7 {
@@ -177,9 +183,10 @@ fn construct_vertices(
             }
         }
     }
+    create_canvas(&mut vertices);
     push_player_vertices(&mut vertices, player);
     push_line_vertices(&mut vertices, player);
-    cast_rays(&mut vertices, player, _is_log);
+    cast_rays(&mut vertices, player, hrays, vrays, _is_log);
 }
 
 // Push square vertices to the vertex array
@@ -200,6 +207,31 @@ fn push_square_vertices(vertices: &mut VertexArrayWrapper, wall: square::Square)
         for num in wall.get_color() {
             vertices.push(num);
         }
+    }
+}
+
+fn create_canvas(vertices: &mut VertexArrayWrapper) {
+    let points: [[f32; 3]; 4] = [
+        [get_x(513.0, WIDTH), get_y(0.0, HEIGHT), 0.0],
+        [get_x(1025.0, WIDTH), get_y(0.0, HEIGHT), 0.0],
+        [get_x(513.0, WIDTH), get_y(512.0, HEIGHT), 0.0],
+        [get_x(1025.0, WIDTH), get_y(512.0, HEIGHT), 0.0],
+    ];
+    for i in 0..=2 {
+        for num in points[i] {
+            vertices.push(num);
+        }
+        vertices.push(1.0);
+        vertices.push(1.0);
+        vertices.push(1.0);
+    }
+    for i in 1..=3 {
+        for num in points[i] {
+            vertices.push(num);
+        }
+        vertices.push(1.0);
+        vertices.push(1.0);
+        vertices.push(1.0);
     }
 }
 
@@ -247,7 +279,13 @@ fn push_line_vertices(vertices: &mut VertexArrayWrapper, player: &player::Player
 }
 
 // Cast rays for rendering
-fn cast_rays(vertices: &mut VertexArrayWrapper, player: &player::Player, _is_log: i32) {
+fn cast_rays(
+    vertices: &mut VertexArrayWrapper,
+    player: &player::Player,
+    hrays: &mut [f32; 60],
+    vrays: &mut [f32; 60],
+    _is_log: i32
+) {
     let map = single_index_map();
     let dr: f32 = 0.0174333; // Ray angle increment
     let mut mx: i32;
@@ -327,6 +365,8 @@ fn cast_rays(vertices: &mut VertexArrayWrapper, player: &player::Player, _is_log
             dof += 1;
         }
 
+        hrays[_r] = distance_3d((player.x_pos + 4.0, player.y_pos + 4.0, 0.0), (rx, ry, 0.0));
+
         vertices.push(player.get_player_x(4.0));
         vertices.push(player.get_player_y(4.0));
         vertices.push(0.0);
@@ -388,6 +428,8 @@ fn cast_rays(vertices: &mut VertexArrayWrapper, player: &player::Player, _is_log
             dof += 1;
         }
 
+        vrays[_r] = distance_3d((player.x_pos + 4.0, player.y_pos + 4.0, 0.0), (rx, ry, 0.0));
+
         vertices.push(player.get_player_x(4.0));
         vertices.push(player.get_player_y(4.0));
         vertices.push(0.0);
@@ -403,6 +445,13 @@ fn cast_rays(vertices: &mut VertexArrayWrapper, player: &player::Player, _is_log
 
         ra += dr;
     }
+}
+
+fn distance_3d(begin: (f32, f32, f32), end: (f32, f32, f32)) -> f32 {
+    let dx = end.0 - begin.0;
+    let dy = end.1 - begin.1;
+    let dz = end.2 - begin.2;
+    (dx * dx + dy * dy + dz * dz).sqrt()
 }
 
 // Vertex array wrapper for managing vertex data
