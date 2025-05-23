@@ -48,18 +48,17 @@ fn main() {
     // Create OpenGL context
     let _gl_context = window.gl_create_context().unwrap();
     // Load OpenGL functions
-    let _gl =
-        gl::load_with(|s| video_subsystem.gl_get_proc_address(s) as *const std::os::raw::c_void);
+    let _gl = gl::load_with(
+        |s| video_subsystem.gl_get_proc_address(s) as *const std::os::raw::c_void
+    );
 
     // Compile shaders
-    let vert_shader = render_gl::Shader::from_vert_source(
-        &CString::new(include_str!("./shaders/triangle.vert")).unwrap(),
-    )
-    .unwrap();
-    let frag_shader = render_gl::Shader::from_frag_source(
-        &CString::new(include_str!("./shaders/triangle.frag")).unwrap(),
-    )
-    .unwrap();
+    let vert_shader = render_gl::Shader
+        ::from_vert_source(&CString::new(include_str!("./shaders/triangle.vert")).unwrap())
+        .unwrap();
+    let frag_shader = render_gl::Shader
+        ::from_frag_source(&CString::new(include_str!("./shaders/triangle.frag")).unwrap())
+        .unwrap();
 
     // Link shaders into a program
     let shader_program = render_gl::Program::from_shaders(&[vert_shader, frag_shader]).unwrap();
@@ -76,8 +75,10 @@ fn main() {
     // Create buffer objects for rendering
     let vbo_squares: gl::types::GLuint = 0;
     let vao_squares: gl::types::GLuint = 0;
-    let mut bab: draw_gl::BufferArrayBinder =
-        draw_gl::BufferArrayBinder::new(vao_squares, vbo_squares);
+    let mut bab: draw_gl::BufferArrayBinder = draw_gl::BufferArrayBinder::new(
+        vao_squares,
+        vbo_squares
+    );
 
     // Main game loop
     let mut event_pump = sdl.event_pump().unwrap();
@@ -152,31 +153,35 @@ fn get_input(event_pump: &sdl2::EventPump, mut player: player::Player) -> player
     if event_pump.keyboard_state().is_scancode_pressed(Scancode::W) {
         player.update_pos(
             player.x_pos + player.get_x_dir() * 5.0,
-            player.y_pos + player.get_y_dir() * 5.0,
+            player.y_pos + player.get_y_dir() * 5.0
         );
     }
     if event_pump.keyboard_state().is_scancode_pressed(Scancode::S) {
         player.update_pos(
             player.x_pos - player.get_x_dir() * 5.0,
-            player.y_pos - player.get_y_dir() * 5.0,
+            player.y_pos - player.get_y_dir() * 5.0
         );
     }
     return player;
 }
 
 // Construct vertices for rendering
-fn construct_vertices(player: &player::Player, mut vertices: &mut VertexArrayWrapper, _is_log: i32) {
+fn construct_vertices(
+    player: &player::Player,
+    mut vertices: &mut VertexArrayWrapper,
+    _is_log: i32
+) {
     for i in 0..=7 {
         for ii in 0..=7 {
             if MAP[i][ii] == 1 {
                 push_square_vertices(
                     &mut vertices,
-                    square::Square::new(ii as i32, i as i32, draw_gl::Color::new(1.0, 1.0, 1.0)),
+                    square::Square::new(ii as i32, i as i32, draw_gl::Color::new(1.0, 1.0, 1.0))
                 );
             } else {
                 push_square_vertices(
                     &mut vertices,
-                    square::Square::new(ii as i32, i as i32, draw_gl::Color::new(0.0, 0.0, 0.0)),
+                    square::Square::new(ii as i32, i as i32, draw_gl::Color::new(0.0, 0.0, 0.0))
                 );
             }
         }
@@ -276,41 +281,26 @@ fn cast_rays(vertices: &mut VertexArrayWrapper, player: &player::Player, _is_log
         dof = 0;
         let a_tan: f32 = -1.0 / ra.tan();
 
-        // If looking down
         if ra > PI && ra < 2.0 * PI {
-            ry = (((player.y_pos + 4.0) / MAP_S as f32).floor() * MAP_S as f32) - 0.0001;
+            // Looking down
+            ry = ((player.y_pos + 4.0) / (MAP_S as f32)).floor() * (MAP_S as f32) - 0.0001;
             rx = (player.y_pos + 4.0 - ry) * a_tan + player.x_pos + 4.0;
             yo = -MAP_S as f32;
             xo = -yo * a_tan;
-        } else if
-            // if looking up
-            ra < PI &&
-            ra > 0.0
-        {
-            ry = (((player.y_pos + 4.0) / MAP_S as f32).floor() * MAP_S as f32) + MAP_S as f32;
+        } else if ra > 0.0 && ra < PI {
+            // Looking up
+            ry = ((player.y_pos + 4.0) / (MAP_S as f32)).floor() * (MAP_S as f32) + (MAP_S as f32);
             rx = (player.y_pos + 4.0 - ry) * a_tan + player.x_pos + 4.0;
             yo = MAP_S as f32;
             xo = -yo * a_tan;
         } else {
-            if ra == 0.0 || ra == 2.0 * PI {
-                rx = player.x_pos + 4.0 + 100.0;
-                ry = player.y_pos + 4.0;
-                yo = 0.0;
-                xo = 100.0;
-                dof = 8;
-            } else if ra == PI {
-                rx = player.x_pos + 4.0 - 100.0;
-                ry = player.y_pos + 4.0;
-                yo = 0.0;
-                xo = -100.0;
-                dof = 8;
-            } else {
-                rx = player.x_pos + 4.0 - 100.0;
-                ry = player.y_pos + 4.0;
-                yo = 0.0;
-                xo = -100.0;
-                dof = 8;
-            }
+            // Exactly horizontal (left or right)
+            let sign = if ra == 0.0 || ra == 2.0 * PI { 1.0 } else { -1.0 };
+            rx = player.x_pos + 4.0 + 100.0 * sign;
+            ry = player.y_pos + 4.0;
+            yo = 0.0;
+            xo = 100.0 * sign;
+            dof = 8;
         }
 
         // Add epsilon to prevent floating-point precision issues
@@ -343,7 +333,7 @@ fn cast_rays(vertices: &mut VertexArrayWrapper, player: &player::Player, _is_log
                 dof += 1;
             }
         }
-        
+
         vertices.push(player.get_player_x(4.0));
         vertices.push(player.get_player_y(4.0));
         vertices.push(0.0);
@@ -363,12 +353,12 @@ fn cast_rays(vertices: &mut VertexArrayWrapper, player: &player::Player, _is_log
         const P3: f32 = (3.0 * PI) / 2.0;
 
         if ra > P2 && ra < P3 {
-            rx = (((player.x_pos + 4.0) / MAP_S as f32).floor() * MAP_S as f32) - 0.0001;
+            rx = ((player.x_pos + 4.0) / (MAP_S as f32)).floor() * (MAP_S as f32) - 0.0001;
             ry = (player.x_pos + 4.0 - rx) * n_tan + player.y_pos + 4.0;
             xo = -MAP_S as f32;
             yo = -xo * n_tan;
         } else if ra < P2 || ra > P3 {
-            rx = (((player.x_pos + 4.0) / MAP_S as f32).floor() * MAP_S as f32) + MAP_S as f32;
+            rx = ((player.x_pos + 4.0) / (MAP_S as f32)).floor() * (MAP_S as f32) + (MAP_S as f32);
             ry = (player.x_pos + 4.0 - rx) * n_tan + player.y_pos + 4.0;
             xo = MAP_S as f32;
             yo = -xo * n_tan;
