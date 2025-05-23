@@ -320,18 +320,20 @@ fn cast_rays(vertices: &mut VertexArrayWrapper, player: &player::Player, _is_log
             my = (ry as i32) / MAP_S;
             _mp = my * MAP_X + mx;
 
-            // Map boundary checks
+            // Break if out of map bounds
             if mx < 0 || mx >= MAP_X || my < 0 || my >= MAP_Y {
                 break;
             }
 
-            if _mp < MAP_X * MAP_Y && _mp >= 0 && map[_mp as usize] == 1 {
-                dof = 8;
-            } else {
-                rx += xo;
-                ry += yo;
-                dof += 1;
+            // Stop if a wall is hit
+            if (0..MAP_X * MAP_Y).contains(&_mp) && map[_mp as usize] == 1 {
+                break;
             }
+
+            // Step to next grid intersection
+            rx += xo;
+            ry += yo;
+            dof += 1;
         }
 
         vertices.push(player.get_player_x(4.0));
@@ -379,18 +381,20 @@ fn cast_rays(vertices: &mut VertexArrayWrapper, player: &player::Player, _is_log
             my = (ry as i32) / MAP_S;
             _mp = my * MAP_X + mx;
 
-            // Map boundary checks
+            // Break if out of map bounds
             if mx < 0 || mx >= MAP_X || my < 0 || my >= MAP_Y {
                 break;
             }
 
-            if _mp < MAP_X * MAP_Y && _mp >= 0 && map[_mp as usize] == 1 {
-                dof = 8;
-            } else {
-                rx += xo;
-                ry += yo;
-                dof += 1;
+            // Stop if a wall is hit
+            if (0..MAP_X * MAP_Y).contains(&_mp) && map[_mp as usize] == 1 {
+                break;
             }
+
+            // Step to next grid intersection
+            rx += xo;
+            ry += yo;
+            dof += 1;
         }
 
         vertices.push(player.get_player_x(4.0));
