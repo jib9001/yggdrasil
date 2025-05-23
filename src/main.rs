@@ -25,7 +25,7 @@ pub mod square;
 pub mod window_gl;
 
 fn main() {
-    let mut _is_log; // Variable to toggle logging
+    let mut _is_log = 0; // Variable to toggle logging
 
     // Initialize SDL2
     let sdl = sdl2::init().unwrap();
@@ -82,16 +82,7 @@ fn main() {
 
     // Main game loop
     let mut event_pump = sdl.event_pump().unwrap();
-    let mut i: i32 = 0;
     'main: loop {
-        // Toggle logging every 30 frames
-        i += 1;
-        if i % 30 == 0 {
-            _is_log = 1;
-        } else {
-            _is_log = 0;
-        }
-
         // Handle events
         for event in event_pump.poll_iter() {
             match event {
