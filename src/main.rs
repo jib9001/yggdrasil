@@ -353,29 +353,25 @@ fn cast_rays(vertices: &mut VertexArrayWrapper, player: &player::Player, _is_log
         const P3: f32 = (3.0 * PI) / 2.0;
 
         if ra > P2 && ra < P3 {
+            // Looking left
             rx = ((player.x_pos + 4.0) / (MAP_S as f32)).floor() * (MAP_S as f32) - 0.0001;
             ry = (player.x_pos + 4.0 - rx) * n_tan + player.y_pos + 4.0;
             xo = -MAP_S as f32;
             yo = -xo * n_tan;
         } else if ra < P2 || ra > P3 {
+            // Looking right
             rx = ((player.x_pos + 4.0) / (MAP_S as f32)).floor() * (MAP_S as f32) + (MAP_S as f32);
             ry = (player.x_pos + 4.0 - rx) * n_tan + player.y_pos + 4.0;
             xo = MAP_S as f32;
             yo = -xo * n_tan;
         } else {
-            if ra == P2 {
-                ry = player.y_pos + 4.0 + 100.0;
-                rx = player.x_pos + 4.0;
-                xo = 0.0;
-                yo = 100.0;
-                dof = 8;
-            } else {
-                ry = player.y_pos + 4.0 - 100.0;
-                rx = player.x_pos + 4.0;
-                xo = 0.0;
-                yo = -100.0;
-                dof = 8;
-            }
+            // Exactly vertical (up or down)
+            let sign = if ra == P2 { 1.0 } else { -1.0 };
+            rx = player.x_pos + 4.0;
+            ry = player.y_pos + 4.0 + 100.0 * sign;
+            xo = 0.0;
+            yo = 100.0 * sign;
+            dof = 8;
         }
 
         while dof < 8 {

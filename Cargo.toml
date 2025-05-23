@@ -7,8 +7,6 @@ edition = "2018"
 
 [dependencies]
 gl = "0.14.0"
-jack = "0.13.2"
 
 [dependencies.sdl2]
-version = "0.35.2"
-features = ["bundled", "static-link"]
+version = "0.37.0"
