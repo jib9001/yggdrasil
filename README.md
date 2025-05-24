@@ -146,7 +146,7 @@ yggdrasil/
 ![Screenshot 1](https://media.discordapp.net/attachments/634540217822478363/1375981119811616788/image.png?ex=6833a9c7&is=68325847&hm=fb4d1e0add5a4ca7319a1d26c61ecee5d1878aad7017846f94ada26bed0a440a&=&format=webp&quality=lossless)
 
 ### Screenshot 2
-![Screenshot 2](https://media.discordapp.net/attachments/634540217822478363/1375981119811616788/image.png?ex=6833a9c7&is=68325847&hm=fb4d1e0add5a4ca7319a1d26c61ecee5d1878aad7017846f94ada26bed0a440a&=&format=webp&quality=lossless)
+![Screenshot 2](https://media.discordapp.net/attachments/634540217822478363/1375982410155425893/image.png?ex=6833aafb&is=6832597b&hm=896ee725bcd725e1ebd2ea84df2ad0e40f5e82d96f05fb4b8e15954ec71945e6&=&format=webp&quality=lossless)
 
 ## Troubleshooting
 
