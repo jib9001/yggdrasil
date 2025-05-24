@@ -9,4 +9,4 @@ edition = "2018"
 gl = "0.14.0"
 
 [dependencies.sdl2]
-version = "0.35.2"
+version = "0.37.0"

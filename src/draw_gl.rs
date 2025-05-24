@@ -27,7 +27,7 @@ impl BufferArrayBinder {
                 gl::ARRAY_BUFFER, // Target buffer type
                 (vertices.len() * std::mem::size_of::<f32>()) as gl::types::GLsizeiptr, // Size of the data in bytes
                 vertices.as_ptr() as *const gl::types::GLvoid, // Pointer to the vertex data
-                gl::STATIC_DRAW, // Usage hint (data will not change often)
+                gl::STATIC_DRAW // Usage hint (data will not change often)
             );
 
             // Generate a Vertex Array Object (VAO)
@@ -50,7 +50,7 @@ impl BufferArrayBinder {
                 gl::FLOAT, // Data type of each component
                 gl::FALSE, // Normalize the data (false for floats)
                 (stride * std::mem::size_of::<f32>()) as gl::types::GLint, // Stride (byte offset between consecutive attributes)
-                std::ptr::null(), // Offset of the first component
+                std::ptr::null() // Offset of the first component
             );
 
             // Enable the vertex attribute for color (layout location 1 in the shader)
@@ -61,7 +61,7 @@ impl BufferArrayBinder {
                 gl::FLOAT, // Data type of each component
                 gl::FALSE, // Normalize the data (false for floats)
                 (stride * std::mem::size_of::<f32>()) as gl::types::GLint, // Stride (byte offset between consecutive attributes)
-                (vertex_size * std::mem::size_of::<f32>()) as *const gl::types::GLvoid, // Offset of the first component
+                (vertex_size * std::mem::size_of::<f32>()) as *const gl::types::GLvoid // Offset of the first component
             );
         }
     }
@@ -75,10 +75,11 @@ impl BufferArrayBinder {
             // Draw the arrays
             gl::DrawArrays(
                 mode, // Drawing mode (e.g., GL_TRIANGLES, GL_LINES)
-                0, // Starting index in the enabled arrays
-                ((end - start) / num_of_indicies) as i32, // Number of indices to render
+                start / num_of_indicies, // Starting index in the enabled arrays
+                ((end - start) / num_of_indicies) as i32 // Number of indices to render
             );
         }
+        //print!("Drawing from {} to {}.\n", start, end); // Print the range of indices being drawn
     }
 }
 
@@ -111,4 +112,52 @@ pub fn get_x(pos_x: f32, width: u32) -> f32 {
 pub fn get_y(pos_y: f32, height: u32) -> f32 {
     let offset: f32 = (height as f32) / 2.0; // Calculate the center of the screen
     ((pos_y - offset) / offset) * -1.0 // Normalize the y-coordinate and invert it
+}
+
+pub struct TextureManager {
+    pub id: gl::types::GLuint, // OpenGL ID for the texture
+}
+impl TextureManager {
+    // Constructor to create a new TextureManager
+    pub fn new() -> TextureManager {
+        let mut id: gl::types::GLuint = 0;
+        unsafe {
+            gl::GenTextures(1, &mut id); // Generate a texture ID
+        }
+        TextureManager { id }
+    }
+
+    // Load a texture from a file
+    pub fn load_texture(&self, pixels: [[[u8; 3]; 60]; 60]) -> Result<(), String> {
+        let mut flat_pixels = Vec::with_capacity(60 * 60 * 3);
+        for row in pixels {
+            for pixel in row {
+                flat_pixels.extend_from_slice(&pixel);
+            }
+        }
+
+        unsafe {
+            gl::BindTexture(gl::TEXTURE_2D, self.id);
+
+            // Set texture parameters
+            gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, gl::NEAREST as i32);
+            gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, gl::NEAREST as i32);
+            gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_S, gl::CLAMP_TO_EDGE as i32);
+            gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_T, gl::CLAMP_TO_EDGE as i32);
+
+            // Upload the pixel data
+            gl::TexImage2D(
+                gl::TEXTURE_2D,
+                0,
+                gl::RGB as i32,
+                60,
+                60,
+                0,
+                gl::RGB,
+                gl::UNSIGNED_BYTE,
+                flat_pixels.as_ptr() as *const _
+            );
+        }
+        Ok(())
+    }
 }
