@@ -115,7 +115,7 @@ pub fn get_y(pos_y: f32, height: u32) -> f32 {
 }
 
 pub struct TextureManager {
-    id: gl::types::GLuint, // OpenGL ID for the texture
+    pub id: gl::types::GLuint, // OpenGL ID for the texture
 }
 impl TextureManager {
     // Constructor to create a new TextureManager

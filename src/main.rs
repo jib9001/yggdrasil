@@ -63,9 +63,16 @@ fn main() {
     let frag_shader = render_gl::Shader
         ::from_frag_source(&CString::new(include_str!("./shaders/triangle.frag")).unwrap())
         .unwrap();
+    let tex_frag_shader = render_gl::Shader
+        ::from_frag_source(&CString::new(include_str!("./shaders/tex.frag")).unwrap())
+        .unwrap();
+    let tex_vert_shader = render_gl::Shader
+        ::from_vert_source(&CString::new(include_str!("./shaders/triangle.vert")).unwrap())
+        .unwrap();
 
     // Link shaders into a program
     let shader_program = render_gl::Program::from_shaders(&[vert_shader, frag_shader]).unwrap();
+    let tex_shader_program = render_gl::Program::from_shaders(&[tex_vert_shader, tex_frag_shader]).unwrap();
 
     // Set up OpenGL state
     unsafe {
@@ -120,15 +127,36 @@ fn main() {
 
         // Use the shader program
         shader_program.set_used();
-
-        // Draw triangles (map and player)
+        bab.set_vertex_attribs(3, 6, 3); // 3 pos, 3 color, stride 6
         bab.draw_arrays(gl::TRIANGLES, 6, 0, vertices.triangle_end() as i32);
-
-        // Draw lines (player direction and rays)
         bab.draw_arrays(gl::LINES, 6, vertices.triangle_end() as i32, vertices.line_end() as i32);
 
-        // Draw triangles (canvas)
-        bab.draw_arrays(gl::TRIANGLES, 6, vertices.line_end() as i32, vertices.len() as i32);
+        // Switch to texture shader for canvas
+        tex_shader_program.set_used();
+        // For canvas: 3 pos, 3 color, 2 texcoord = 8 floats per vertex
+        bab.set_vertex_attribs(3, 8, 3);
+        // Set up texcoord attribute (location 2)
+        unsafe {
+            gl::EnableVertexAttribArray(2);
+            gl::VertexAttribPointer(
+                2, // location 2 in shader
+                2, // 2 floats for texcoord
+                gl::FLOAT,
+                gl::FALSE,
+                (8 * std::mem::size_of::<f32>()) as gl::types::GLint,
+                (6 * std::mem::size_of::<f32>()) as *const gl::types::GLvoid,
+            );
+            gl::ActiveTexture(gl::TEXTURE0);
+            gl::BindTexture(gl::TEXTURE_2D, _texture_manager.id);
+            let tex_loc = gl::GetUniformLocation(tex_shader_program.id(), b"tex\0".as_ptr() as *const _);
+            gl::Uniform1i(tex_loc, 0);
+        }
+        bab.draw_arrays(
+            gl::TRIANGLES,
+            8, // vertex size for canvas
+            vertices.line_end() as i32,
+            vertices.len() as i32
+        );
 
         // Swap the window buffer
         window.gl_swap_window();
@@ -219,27 +247,24 @@ fn push_square_vertices(vertices: &mut VertexArrayWrapper, wall: square::Square)
 }
 
 fn create_canvas(vertices: &mut VertexArrayWrapper) {
-    let points: [[f32; 3]; 4] = [
-        [get_x(513.0, WIDTH), get_y(0.0, HEIGHT), 0.0],
-        [get_x(1025.0, WIDTH), get_y(0.0, HEIGHT), 0.0],
-        [get_x(513.0, WIDTH), get_y(512.0, HEIGHT), 0.0],
-        [get_x(1025.0, WIDTH), get_y(512.0, HEIGHT), 0.0],
+    // x, y, z, r, g, b, u, v
+    let points = [
+        [get_x(513.0, WIDTH), get_y(0.0, HEIGHT), 0.0, 1.0, 1.0, 1.0, 0.0, 0.0],   // top-left
+        [get_x(1025.0, WIDTH), get_y(0.0, HEIGHT), 0.0, 1.0, 1.0, 1.0, 1.0, 0.0],  // top-right
+        [get_x(513.0, WIDTH), get_y(512.0, HEIGHT), 0.0, 1.0, 1.0, 1.0, 0.0, 1.0], // bottom-left
+        [get_x(1025.0, WIDTH), get_y(512.0, HEIGHT), 0.0, 1.0, 1.0, 1.0, 1.0, 1.0],// bottom-right
     ];
-    for i in 0..=2 {
-        for num in points[i] {
+    // First triangle
+    for &i in &[0, 1, 2] {
+        for &num in &points[i] {
             vertices.push(num);
         }
-        vertices.push(1.0);
-        vertices.push(1.0);
-        vertices.push(1.0);
     }
-    for i in 1..=3 {
-        for num in points[i] {
+    // Second triangle
+    for &i in &[1, 3, 2] {
+        for &num in &points[i] {
             vertices.push(num);
         }
-        vertices.push(1.0);
-        vertices.push(1.0);
-        vertices.push(1.0);
     }
 }
 
