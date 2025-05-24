@@ -118,9 +118,14 @@ fn main() {
         // Use the shader program
         shader_program.set_used();
 
-        // Draw triangles and lines
+        // Draw triangles (map and player)
         bab.draw_arrays(gl::TRIANGLES, 6, 0, vertices.triangle_end() as i32);
-        bab.draw_arrays(gl::LINES, 6, 0, vertices.len() as i32);
+
+        // Draw lines (player direction and rays)
+        bab.draw_arrays(gl::LINES, 6, vertices.triangle_end() as i32, vertices.line_end() as i32);
+
+        // Draw triangles (canvas)
+        bab.draw_arrays(gl::TRIANGLES, 6, vertices.line_end() as i32, vertices.len() as i32);
 
         // Swap the window buffer
         window.gl_swap_window();
@@ -183,10 +188,10 @@ fn construct_vertices(
             }
         }
     }
-    create_canvas(&mut vertices);
     push_player_vertices(&mut vertices, player);
     push_line_vertices(&mut vertices, player);
     cast_rays(&mut vertices, player, hrays, vrays, _is_log);
+    create_canvas(&mut vertices);
 }
 
 // Push square vertices to the vertex array
@@ -445,6 +450,8 @@ fn cast_rays(
 
         ra += dr;
     }
+
+    vertices.set_line_end(vertices.len());
 }
 
 fn distance_3d(begin: (f32, f32, f32), end: (f32, f32, f32)) -> f32 {
@@ -458,20 +465,27 @@ fn distance_3d(begin: (f32, f32, f32), end: (f32, f32, f32)) -> f32 {
 struct VertexArrayWrapper {
     points: Vec<f32>,
     triangle_end: usize,
+    line_end: usize,
 }
 
 impl VertexArrayWrapper {
     pub fn new() -> VertexArrayWrapper {
         let points = Vec::new();
         let triangle_end = 0;
+        let line_end = 0;
         VertexArrayWrapper {
             points,
             triangle_end,
+            line_end,
         }
     }
 
     pub fn set_triangle_end(&mut self, end: usize) {
         self.triangle_end = end;
+    }
+
+    pub fn set_line_end(&mut self, end: usize) {
+        self.line_end = end;
     }
 
     pub fn len(&self) -> usize {
@@ -488,5 +502,9 @@ impl VertexArrayWrapper {
 
     pub fn triangle_end(&self) -> usize {
         return self.triangle_end;
+    }
+
+    pub fn line_end(&self) -> usize {
+        return self.line_end;
     }
 }

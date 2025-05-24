@@ -10,4 +10,3 @@ gl = "0.14.0"
 
 [dependencies.sdl2]
 version = "0.37.0"
-features = ["bundled"]

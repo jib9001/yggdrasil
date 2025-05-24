@@ -27,7 +27,7 @@ impl BufferArrayBinder {
                 gl::ARRAY_BUFFER, // Target buffer type
                 (vertices.len() * std::mem::size_of::<f32>()) as gl::types::GLsizeiptr, // Size of the data in bytes
                 vertices.as_ptr() as *const gl::types::GLvoid, // Pointer to the vertex data
-                gl::STATIC_DRAW, // Usage hint (data will not change often)
+                gl::STATIC_DRAW // Usage hint (data will not change often)
             );
 
             // Generate a Vertex Array Object (VAO)
@@ -50,7 +50,7 @@ impl BufferArrayBinder {
                 gl::FLOAT, // Data type of each component
                 gl::FALSE, // Normalize the data (false for floats)
                 (stride * std::mem::size_of::<f32>()) as gl::types::GLint, // Stride (byte offset between consecutive attributes)
-                std::ptr::null(), // Offset of the first component
+                std::ptr::null() // Offset of the first component
             );
 
             // Enable the vertex attribute for color (layout location 1 in the shader)
@@ -61,7 +61,7 @@ impl BufferArrayBinder {
                 gl::FLOAT, // Data type of each component
                 gl::FALSE, // Normalize the data (false for floats)
                 (stride * std::mem::size_of::<f32>()) as gl::types::GLint, // Stride (byte offset between consecutive attributes)
-                (vertex_size * std::mem::size_of::<f32>()) as *const gl::types::GLvoid, // Offset of the first component
+                (vertex_size * std::mem::size_of::<f32>()) as *const gl::types::GLvoid // Offset of the first component
             );
         }
     }
@@ -75,10 +75,11 @@ impl BufferArrayBinder {
             // Draw the arrays
             gl::DrawArrays(
                 mode, // Drawing mode (e.g., GL_TRIANGLES, GL_LINES)
-                0, // Starting index in the enabled arrays
-                ((end - start) / num_of_indicies) as i32, // Number of indices to render
+                start / num_of_indicies, // Starting index in the enabled arrays
+                ((end - start) / num_of_indicies) as i32 // Number of indices to render
             );
         }
+        //print!("Drawing from {} to {}.\n", start, end); // Print the range of indices being drawn
     }
 }
 
