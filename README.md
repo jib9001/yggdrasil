@@ -140,15 +140,19 @@ yggdrasil/
    - `triangle.vert`/`triangle.frag`: For colored geometry (map, player, rays).
    - `tex.vert`/`tex.frag`: For rendering the raycasted scene as a texture.
 
+## Screenshots
+
+### Screenshot 1
+![Screenshot 1](https://media.discordapp.net/attachments/634540217822478363/1375981119811616788/image.png?ex=6833a9c7&is=68325847&hm=fb4d1e0add5a4ca7319a1d26c61ecee5d1878aad7017846f94ada26bed0a440a&=&format=webp&quality=lossless)
+
+### Screenshot 2
+![Screenshot 2](https://media.discordapp.net/attachments/634540217822478363/1375981119811616788/image.png?ex=6833a9c7&is=68325847&hm=fb4d1e0add5a4ca7319a1d26c61ecee5d1878aad7017846f94ada26bed0a440a&=&format=webp&quality=lossless)
+
 ## Troubleshooting
 
 - If you see only a solid color or no walls, check your OpenGL driver, SDL2 installation, and that your system supports OpenGL 4.1+.
 - If you see blurry pixels, ensure nearest-neighbor filtering is set in `draw_gl.rs` (`gl::TexParameteri` with `gl::NEAREST`).
 - For debugging, print the contents of the `_pixels` array before uploading the texture.
-
-## Screenshots
-
-*(Add screenshots of the game here to showcase the rendering and gameplay.)*
 
 ## License
 
