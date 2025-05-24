@@ -37,6 +37,14 @@ Install SDL2 development libraries:
 - **Windows**:  
   Use [vcpkg](https://github.com/microsoft/vcpkg) or download SDL2 from the [official website](https://www.libsdl.org/).
 
+#### Windows (Using Chocolatey)
+1. Install [Chocolatey](https://chocolatey.org/install) if you haven't already.
+2. Open a command prompt as Administrator.
+3. Run the following command to install SDL2:
+   ```bash
+   choco install sdl2
+   ```
+
 ### OpenGL Development Libraries
 
 - **Debian/Ubuntu**:  
@@ -51,6 +59,13 @@ Install SDL2 development libraries:
   OpenGL is included by default.
 - **Windows**:  
   Use [vcpkg](https://github.com/microsoft/vcpkg) or download from the [official website](https://www.opengl.org/).
+
+#### Windows (Using Chocolatey)
+1. Open a command prompt as Administrator.
+2. Run the following command to install OpenGL libraries:
+   ```bash
+   choco install opengl
+   ```
 
 ### X11 Extension Headers (Linux only)
 
