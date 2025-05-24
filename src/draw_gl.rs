@@ -113,3 +113,51 @@ pub fn get_y(pos_y: f32, height: u32) -> f32 {
     let offset: f32 = (height as f32) / 2.0; // Calculate the center of the screen
     ((pos_y - offset) / offset) * -1.0 // Normalize the y-coordinate and invert it
 }
+
+pub struct TextureManager {
+    id: gl::types::GLuint, // OpenGL ID for the texture
+}
+impl TextureManager {
+    // Constructor to create a new TextureManager
+    pub fn new() -> TextureManager {
+        let mut id: gl::types::GLuint = 0;
+        unsafe {
+            gl::GenTextures(1, &mut id); // Generate a texture ID
+        }
+        TextureManager { id }
+    }
+
+    // Load a texture from a file
+    pub fn load_texture(&self, pixels: [[[u8; 3]; 60]; 60]) -> Result<(), String> {
+        let mut flat_pixels = Vec::with_capacity(60 * 60 * 3);
+        for row in pixels {
+            for pixel in row {
+                flat_pixels.extend_from_slice(&pixel);
+            }
+        }
+
+        unsafe {
+            gl::BindTexture(gl::TEXTURE_2D, self.id);
+
+            // Set texture parameters
+            gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, gl::LINEAR as i32);
+            gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, gl::LINEAR as i32);
+            gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_S, gl::CLAMP_TO_EDGE as i32);
+            gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_T, gl::CLAMP_TO_EDGE as i32);
+
+            // Upload the pixel data
+            gl::TexImage2D(
+                gl::TEXTURE_2D,
+                0,
+                gl::RGB as i32,
+                60,
+                60,
+                0,
+                gl::RGB,
+                gl::UNSIGNED_BYTE,
+                flat_pixels.as_ptr() as *const _
+            );
+        }
+        Ok(())
+    }
+}

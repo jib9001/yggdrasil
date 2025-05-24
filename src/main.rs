@@ -27,7 +27,7 @@ pub mod window_gl;
 fn main() {
     let mut _is_log = 0; // Variable to toggle logging
 
-    let mut _pixels: [[[u8; 3]; 60]; 60];
+    let mut _pixels = [[[0u8; 3]; 60]; 60]; // Pixel data for texture
     let mut hrays: [f32; 60] = [0.0; 60];
     let mut vrays: [f32; 60] = [0.0; 60];
 
@@ -75,6 +75,9 @@ fn main() {
 
     // Create the player object
     let mut player: player::Player = player::Player::new(200.0, 200.0);
+
+    let mut _texture_manager = draw_gl::TextureManager::new(); // Texture manager instance
+    _texture_manager.load_texture(_pixels).unwrap(); // Load texture data
 
     // Create buffer objects for rendering
     let vbo_squares: gl::types::GLuint = 0;
