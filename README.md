@@ -37,14 +37,6 @@ Install SDL2 development libraries:
 - **Windows**:  
   Use [vcpkg](https://github.com/microsoft/vcpkg) or download SDL2 from the [official website](https://www.libsdl.org/).
 
-#### Windows (Using Chocolatey)
-1. Install [Chocolatey](https://chocolatey.org/install) if you haven't already.
-2. Open a command prompt as Administrator.
-3. Run the following command to install SDL2:
-   ```bash
-   choco install sdl2
-   ```
-
 ### OpenGL Development Libraries
 
 - **Debian/Ubuntu**:  
@@ -60,13 +52,6 @@ Install SDL2 development libraries:
 - **Windows**:  
   Use [vcpkg](https://github.com/microsoft/vcpkg) or download from the [official website](https://www.opengl.org/).
 
-#### Windows (Using Chocolatey)
-1. Open a command prompt as Administrator.
-2. Run the following command to install OpenGL libraries:
-   ```bash
-   choco install opengl
-   ```
-
 ### X11 Extension Headers (Linux only)
 
 - **Debian/Ubuntu**:  
@@ -81,12 +66,14 @@ Install SDL2 development libraries:
 ## Building the Project
 
 1. Clone the repository:
+
    ```bash
    git clone <repository-url>
    cd yggdrasil
    ```
 
 2. Build the project:
+
    ```bash
    cargo build
    ```
@@ -137,17 +124,20 @@ yggdrasil/
 ## How It Works
 
 1. **Raycasting**:
+
    - Rays are cast from the player's position at different angles.
    - Each ray checks for intersections with walls in the grid-based map.
    - The shortest distance (horizontal or vertical) is used for each column, with fisheye correction.
    - The wall height is calculated and drawn into a 60×60 pixel buffer.
 
 2. **Rendering**:
+
    - The pixel buffer is uploaded as a texture to OpenGL.
    - A screen-aligned quad (canvas) displays the texture, scaled up with nearest-neighbor filtering for crisp pixels.
    - The map, player, and rays are also rendered as colored geometry for debugging.
 
 3. **Player Movement**:
+
    - The player can rotate and move forward/backward using WASD keys.
    - The player's position and direction affect the raycasting and rendering.
 
@@ -158,9 +148,11 @@ yggdrasil/
 ## Screenshots
 
 ### Screenshot 1
+
 ![Screenshot 1](https://media.discordapp.net/attachments/634540217822478363/1375981119811616788/image.png?ex=6833a9c7&is=68325847&hm=fb4d1e0add5a4ca7319a1d26c61ecee5d1878aad7017846f94ada26bed0a440a&=&format=webp&quality=lossless)
 
 ### Screenshot 2
+
 ![Screenshot 2](https://media.discordapp.net/attachments/634540217822478363/1375982410155425893/image.png?ex=6833aafb&is=6832597b&hm=896ee725bcd725e1ebd2ea84df2ad0e40f5e82d96f05fb4b8e15954ec71945e6&=&format=webp&quality=lossless)
 
 ## Troubleshooting
