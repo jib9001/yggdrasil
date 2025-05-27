@@ -39,6 +39,8 @@ Install SDL2 development libraries:
 
 ### OpenGL Development Libraries
 
+Install OpenGL development libraries:
+
 - **Debian/Ubuntu**:  
   `sudo apt-get install libgl1-mesa-dev`
 - **Fedora**:  
@@ -95,11 +97,11 @@ Install SDL2 development libraries:
 ```
 yggdrasil/
 ├── src/
-│   ├── main.rs          # Main game loop, input, and rendering logic
-│   ├── draw_gl.rs       # OpenGL buffer, texture, and rendering helpers
-│   ├── log.rs           # Logging utilities for debugging
+│   ├── main.rs          # Entry point of the application
+│   ├── draw_gl.rs       # OpenGL helper functions for rendering
+│   ├── log.rs           # Logging utilities
 │   ├── player.rs        # Player struct and movement logic
-│   ├── render_gl.rs     # Shader and OpenGL program management
+│   ├── render_gl.rs     # Shader and OpenGL program management, vertex construction
 │   ├── square.rs        # Square struct for map tiles
 │   ├── window_gl.rs     # SDL2 window and OpenGL context setup, map constants
 │   └── shaders/
@@ -113,13 +115,12 @@ yggdrasil/
 
 ### Key Files
 
-- **`main.rs`**: Main loop, raycasting, input, and rendering.
-- **`draw_gl.rs`**: OpenGL buffer and texture management, color utilities.
-- **`player.rs`**: Player struct and movement.
-- **`render_gl.rs`**: Shader compilation and program management.
-- **`square.rs`**: Map tile representation.
-- **`window_gl.rs`**: SDL2 window/context setup, map constants.
-- **`shaders/`**: GLSL shaders for both colored and textured rendering.
+- **`main.rs`**: Contains the main game loop, input handling, and rendering logic.
+- **`draw_gl.rs`**: Provides utilities for managing OpenGL buffers, textures, and rendering primitives.
+- **`render_gl.rs`**: Manages shaders, OpenGL programs, and vertex construction for rendering.
+- **`player.rs`**: Defines the `Player` struct and handles player movement and direction.
+- **`square.rs`**: Represents individual map tiles as squares.
+- **`window_gl.rs`**: Handles SDL2 window creation and OpenGL context initialization.
 
 ## How It Works
 
@@ -160,11 +161,3 @@ yggdrasil/
 - If you see only a solid color or no walls, check your OpenGL driver, SDL2 installation, and that your system supports OpenGL 4.1+.
 - If you see blurry pixels, ensure nearest-neighbor filtering is set in `draw_gl.rs` (`gl::TexParameteri` with `gl::NEAREST`).
 - For debugging, print the contents of the `_pixels` array before uploading the texture.
-
-## License
-
-MIT License (or specify your license here).
-
----
-
-**Enjoy exploring and hacking on Yggdrasil!**
