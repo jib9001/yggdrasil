@@ -1,7 +1,13 @@
 // Import OpenGL bindings and standard library utilities
 use gl;
 use std;
-use std::ffi::{CStr, CString};
+use std::ffi::{ CStr, CString };
+use crate::window_gl::{ HEIGHT, WIDTH, MAP, MAP_S, MAP_X, MAP_Y, single_index_map };
+use std::f32::consts::PI;
+use crate::draw_gl::{ get_x, get_y, VertexArrayWrapper, Color };
+use crate::player;
+use crate::square;
+// Import the `draw_gl` module for drawing utilities
 
 // Represents an OpenGL shader program
 pub struct Program {
@@ -46,7 +52,7 @@ impl Program {
                     program_id,
                     len,
                     std::ptr::null_mut(),
-                    error.as_ptr() as *mut gl::types::GLchar,
+                    error.as_ptr() as *mut gl::types::GLchar
                 );
             }
 
@@ -153,7 +159,7 @@ fn shader_from_source(source: &CStr, kind: gl::types::GLenum) -> Result<gl::type
                 id,
                 len,
                 std::ptr::null_mut(),
-                error.as_ptr() as *mut gl::types::GLchar,
+                error.as_ptr() as *mut gl::types::GLchar
             );
         }
 
@@ -170,5 +176,363 @@ fn create_whitespace_cstring_with_len(len: usize) -> CString {
     // Fill the buffer with spaces
     buffer.extend([b' '].iter().cycle().take(len));
     // Convert the buffer to a CString
-    unsafe { CString::from_vec_unchecked(buffer) }
+    unsafe {
+        CString::from_vec_unchecked(buffer)
+    }
+}
+
+// --- Construct Vertices for All Geometry (map, player, lines, rays, canvas) ---
+pub fn construct_vertices(
+    player: &player::Player,
+    mut vertices: &mut VertexArrayWrapper,
+    hrays: &mut [f32; 60],
+    vrays: &mut [f32; 60],
+    _is_log: i32
+) {
+    // Map squares
+    for i in 0..=7 {
+        for ii in 0..=7 {
+            if MAP[i][ii] == 1 {
+                push_square_vertices(
+                    &mut vertices,
+                    square::Square::new(ii as i32, i as i32, Color::new(1.0, 1.0, 1.0))
+                );
+            } else {
+                push_square_vertices(
+                    &mut vertices,
+                    square::Square::new(ii as i32, i as i32, Color::new(0.0, 0.0, 0.0))
+                );
+            }
+        }
+    }
+    // Player quad
+    push_player_vertices(&mut vertices, player);
+    // Player direction line
+    push_line_vertices(&mut vertices, player);
+    // Ray lines and ray distances
+    cast_rays(&mut vertices, player, hrays, vrays, _is_log);
+    // Canvas quad (for displaying the raycasted texture)
+    create_canvas(&mut vertices);
+}
+
+// --- Create Canvas Quad Vertices (for displaying the texture) ---
+fn create_canvas(vertices: &mut VertexArrayWrapper) {
+    // Each vertex: [x, y, z, r, g, b, u, v]
+    let points = [
+        [get_x(513.0, WIDTH), get_y(0.0, HEIGHT), 0.0, 1.0, 1.0, 1.0, 0.0, 0.0], // top-left
+        [get_x(1025.0, WIDTH), get_y(0.0, HEIGHT), 0.0, 1.0, 1.0, 1.0, 1.0, 0.0], // top-right
+        [get_x(513.0, WIDTH), get_y(512.0, HEIGHT), 0.0, 1.0, 1.0, 1.0, 0.0, 1.0], // bottom-left
+        [get_x(1025.0, WIDTH), get_y(512.0, HEIGHT), 0.0, 1.0, 1.0, 1.0, 1.0, 1.0], // bottom-right
+    ];
+    // First triangle
+    for &i in &[0, 1, 2] {
+        for &num in &points[i] {
+            vertices.push(num);
+        }
+    }
+    // Second triangle
+    for &i in &[1, 3, 2] {
+        for &num in &points[i] {
+            vertices.push(num);
+        }
+    }
+}
+
+// --- Push Vertices for the Player Quad ---
+fn push_player_vertices(vertices: &mut VertexArrayWrapper, player: &player::Player) {
+    let points: [[f32; 3]; 4] = [
+        player.tl_point,
+        player.tr_point,
+        player.bl_point,
+        player.br_point,
+    ];
+    for i in 0..=2 {
+        for num in points[i] {
+            vertices.push(num);
+        }
+        for num in player.color {
+            vertices.push(num);
+        }
+    }
+    for i in 1..=3 {
+        for num in points[i] {
+            vertices.push(num);
+        }
+        for num in player.color {
+            vertices.push(num);
+        }
+    }
+    vertices.set_triangle_end(vertices.len());
+}
+
+// --- Push Vertices for a Map Square (as two triangles) ---
+fn push_square_vertices(vertices: &mut VertexArrayWrapper, wall: square::Square) {
+    let points: [[f32; 3]; 4] = wall.get_vertices();
+    for i in 0..=2 {
+        for num in points[i] {
+            vertices.push(num);
+        }
+        for num in wall.get_color() {
+            vertices.push(num);
+        }
+    }
+    for i in 1..=3 {
+        for num in points[i] {
+            vertices.push(num);
+        }
+        for num in wall.get_color() {
+            vertices.push(num);
+        }
+    }
+}
+
+// --- Push Vertices for the Player's Direction Line ---
+fn push_line_vertices(vertices: &mut VertexArrayWrapper, player: &player::Player) {
+    vertices.push(player.get_player_x(4.0));
+    vertices.push(player.get_player_y(4.0));
+    vertices.push(0.0);
+    vertices.push(1.0);
+    vertices.push(1.0);
+    vertices.push(0.0);
+    vertices.push(player.get_player_x(4.0 + player.get_x_dir() * 20.0));
+    vertices.push(player.get_player_y(4.0 + player.get_y_dir() * 20.0));
+    vertices.push(0.0);
+    vertices.push(1.0);
+    vertices.push(1.0);
+    vertices.push(0.0);
+}
+
+// --- Raycasting: Cast Rays, Store Distances, and Push Ray Vertices ---
+fn cast_rays(
+    vertices: &mut VertexArrayWrapper,
+    player: &player::Player,
+    hrays: &mut [f32; 60],
+    vrays: &mut [f32; 60],
+    _is_log: i32
+) {
+    let map = single_index_map();
+    let dr: f32 = 0.0174333; // Ray angle increment
+    let mut mx: i32;
+    let mut my: i32;
+    let mut _mp: i32;
+    let mut dof: i32;
+
+    let mut rx: f32;
+    let mut ry: f32;
+    let mut xo: f32;
+    let mut yo: f32;
+    let mut ra: f32 = player.get_dir() - dr * 30.0; // Start angle for rays
+
+    for _r in 0..60 {
+        // Normalize ra
+        if ra < 0.0 {
+            ra += 2.0 * PI;
+        } else if ra > 2.0 * PI {
+            ra -= 2.0 * PI;
+        }
+
+        dof = 0;
+        let a_tan: f32 = -1.0 / ra.tan();
+
+        if ra > PI && ra < 2.0 * PI {
+            // Looking down
+            ry = ((player.y_pos + 4.0) / (MAP_S as f32)).floor() * (MAP_S as f32) - 0.0001;
+            rx = (player.y_pos + 4.0 - ry) * a_tan + player.x_pos + 4.0;
+            yo = -MAP_S as f32;
+            xo = -yo * a_tan;
+        } else if ra > 0.0 && ra < PI {
+            // Looking up
+            ry = ((player.y_pos + 4.0) / (MAP_S as f32)).floor() * (MAP_S as f32) + (MAP_S as f32);
+            rx = (player.y_pos + 4.0 - ry) * a_tan + player.x_pos + 4.0;
+            yo = MAP_S as f32;
+            xo = -yo * a_tan;
+        } else {
+            // Exactly horizontal (left or right)
+            let sign = if ra == 0.0 || ra == 2.0 * PI { 1.0 } else { -1.0 };
+            rx = player.x_pos + 4.0 + 100.0 * sign;
+            ry = player.y_pos + 4.0;
+            yo = 0.0;
+            xo = 100.0 * sign;
+            dof = 8;
+        }
+
+        // Add epsilon to prevent floating-point precision issues
+        let epsilon = 0.0001;
+        if ra > PI && ra < 2.0 * PI {
+            rx -= epsilon;
+        } else if ra < PI {
+            rx += epsilon;
+        }
+
+        mx = (rx as i32) / MAP_S;
+        my = (ry as i32) / MAP_S;
+        _mp = my * MAP_X + mx;
+
+        while dof < 8 {
+            mx = (rx as i32) / MAP_S;
+            my = (ry as i32) / MAP_S;
+            _mp = my * MAP_X + mx;
+
+            // Break if out of map bounds
+            if mx < 0 || mx >= MAP_X || my < 0 || my >= MAP_Y {
+                break;
+            }
+
+            // Stop if a wall is hit
+            if (0..MAP_X * MAP_Y).contains(&_mp) && map[_mp as usize] == 1 {
+                break;
+            }
+
+            // Step to next grid intersection
+            rx += xo;
+            ry += yo;
+            dof += 1;
+        }
+
+        hrays[_r] = distance_3d((player.x_pos + 4.0, player.y_pos + 4.0, 0.0), (rx, ry, 0.0));
+
+        vertices.push(player.get_player_x(4.0));
+        vertices.push(player.get_player_y(4.0));
+        vertices.push(0.0);
+        vertices.push(0.0);
+        vertices.push(1.0);
+        vertices.push(0.0);
+        vertices.push(get_x(rx, WIDTH));
+        vertices.push(get_y(ry, HEIGHT));
+        vertices.push(0.0);
+        vertices.push(0.0);
+        vertices.push(1.0);
+        vertices.push(0.0);
+
+        dof = 0;
+        let n_tan: f32 = -ra.tan();
+        const P2: f32 = PI / 2.0;
+        const P3: f32 = (3.0 * PI) / 2.0;
+
+        if ra > P2 && ra < P3 {
+            // Looking left
+            rx = ((player.x_pos + 4.0) / (MAP_S as f32)).floor() * (MAP_S as f32) - 0.0001;
+            ry = (player.x_pos + 4.0 - rx) * n_tan + player.y_pos + 4.0;
+            xo = -MAP_S as f32;
+            yo = -xo * n_tan;
+        } else if ra < P2 || ra > P3 {
+            // Looking right
+            rx = ((player.x_pos + 4.0) / (MAP_S as f32)).floor() * (MAP_S as f32) + (MAP_S as f32);
+            ry = (player.x_pos + 4.0 - rx) * n_tan + player.y_pos + 4.0;
+            xo = MAP_S as f32;
+            yo = -xo * n_tan;
+        } else {
+            // Exactly vertical (up or down)
+            let sign = if ra == P2 { 1.0 } else { -1.0 };
+            rx = player.x_pos + 4.0;
+            ry = player.y_pos + 4.0 + 100.0 * sign;
+            xo = 0.0;
+            yo = 100.0 * sign;
+            dof = 8;
+        }
+
+        while dof < 8 {
+            mx = (rx as i32) / MAP_S;
+            my = (ry as i32) / MAP_S;
+            _mp = my * MAP_X + mx;
+
+            // Break if out of map bounds
+            if mx < 0 || mx >= MAP_X || my < 0 || my >= MAP_Y {
+                break;
+            }
+
+            // Stop if a wall is hit
+            if (0..MAP_X * MAP_Y).contains(&_mp) && map[_mp as usize] == 1 {
+                break;
+            }
+
+            // Step to next grid intersection
+            rx += xo;
+            ry += yo;
+            dof += 1;
+        }
+
+        vrays[_r] = distance_3d((player.x_pos + 4.0, player.y_pos + 4.0, 0.0), (rx, ry, 0.0));
+
+        vertices.push(player.get_player_x(4.0));
+        vertices.push(player.get_player_y(4.0));
+        vertices.push(0.0);
+        vertices.push(1.0);
+        vertices.push(0.0);
+        vertices.push(0.0);
+        vertices.push(get_x(rx, WIDTH));
+        vertices.push(get_y(ry, HEIGHT));
+        vertices.push(0.0);
+        vertices.push(1.0);
+        vertices.push(0.0);
+        vertices.push(0.0);
+
+        ra += dr;
+    }
+
+    vertices.set_line_end(vertices.len());
+}
+
+// --- Utility: 3D Distance Calculation ---
+fn distance_3d(begin: (f32, f32, f32), end: (f32, f32, f32)) -> f32 {
+    let dx = end.0 - begin.0;
+    let dy = end.1 - begin.1;
+    let dz = end.2 - begin.2;
+    (dx * dx + dy * dy + dz * dz).sqrt()
+}
+
+// --- Raycasting: Draw Walls to Pixel Buffer (with fisheye correction) ---
+pub fn draw_walls_to_pixels(
+    _pixels: &mut [[[u8; 3]; 60]; 60],
+    hrays: &[f32; 60],
+    vrays: &[f32; 60],
+    horiz_color: [u8; 3],
+    vert_color: [u8; 3],
+    background_color: [u8; 3]
+) {
+    let screen_height = 60;
+    let screen_width = 60;
+    let fov = std::f32::consts::FRAC_PI_3; // 60 degrees
+    let proj_plane_dist = (screen_width as f32) / 2.0 / (fov / 2.0).tan();
+    let wall_height_world = 1.0;
+
+    for x in 0..screen_width {
+        let h_dist = hrays[x].max(0.0001);
+        let v_dist = vrays[x].max(0.0001);
+
+        // Use the shorter distance for wall height
+        let (raw_dist, color) = if h_dist < v_dist {
+            (h_dist, horiz_color)
+        } else {
+            (v_dist, vert_color)
+        };
+
+        // --- Fisheye correction: project ray distance onto view direction ---
+        let ray_angle_offset =
+            ((x as f32) - (screen_width as f32) / 2.0) * (fov / (screen_width as f32));
+        let dist = raw_dist * ray_angle_offset.cos();
+
+        // Calculate projected wall height in pixels
+        let mut wall_height = (20.0 * (wall_height_world * proj_plane_dist)) / dist;
+        if wall_height > (screen_height as f32) {
+            wall_height = screen_height as f32;
+        }
+
+        // Compute top and bottom of the wall slice
+        let wall_top = (((screen_height as f32) - wall_height) / 2.0).round() as i32;
+        let wall_bottom = (((screen_height as f32) + wall_height) / 2.0).round() as i32;
+
+        // Fill the pixel buffer for this column
+        for y in 0..screen_height {
+            if (y as i32) < wall_top {
+                _pixels[y][x] = background_color; // Ceiling
+            } else if (y as i32) >= wall_top && (y as i32) < wall_bottom {
+                _pixels[y][x] = color; // Wall
+            } else {
+                _pixels[y][x] = background_color; // Floor
+            }
+        }
+        // Uncomment for debugging wall heights:
+        // println!("x: {}, wall_height: {}", x, wall_height);
+    }
 }

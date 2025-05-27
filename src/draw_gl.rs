@@ -83,6 +83,47 @@ impl BufferArrayBinder {
     }
 }
 
+// --- Vertex Array Wrapper Struct and Methods ---
+pub struct VertexArrayWrapper {
+    points: Vec<f32>,
+    triangle_end: usize,
+    line_end: usize,
+}
+
+impl VertexArrayWrapper {
+    pub fn new() -> VertexArrayWrapper {
+        let points = Vec::new();
+        let triangle_end = 0;
+        let line_end = 0;
+        VertexArrayWrapper {
+            points,
+            triangle_end,
+            line_end,
+        }
+    }
+    pub fn set_triangle_end(&mut self, end: usize) {
+        self.triangle_end = end;
+    }
+    pub fn set_line_end(&mut self, end: usize) {
+        self.line_end = end;
+    }
+    pub fn len(&self) -> usize {
+        self.points.len()
+    }
+    pub fn push(&mut self, num: f32) {
+        self.points.push(num);
+    }
+    pub fn points(&self) -> &Vec<f32> {
+        &self.points
+    }
+    pub fn triangle_end(&self) -> usize {
+        self.triangle_end
+    }
+    pub fn line_end(&self) -> usize {
+        self.line_end
+    }
+}
+
 // Struct to represent a color (RGB)
 pub struct Color {
     r: f32, // Red component
