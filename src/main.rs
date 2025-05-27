@@ -116,7 +116,7 @@ fn main() {
             &mut _pixels,
             &hrays,
             &vrays,
-            [200, 200, 200], // horizontal wall color (light gray)
+            [120, 120, 120], // horizontal wall color (light gray)
             [80, 80, 80], // vertical wall color (dark gray)
             [30, 30, 60] // background color (dark blue)
         );
