@@ -194,14 +194,14 @@ fn get_input(event_pump: &sdl2::EventPump, mut player: player::Player) -> player
     }
     if event_pump.keyboard_state().is_scancode_pressed(Scancode::W) {
         player.update_pos(
-            player.x_pos + player.get_x_dir() * 2.0,
-            player.y_pos + player.get_y_dir() * 2.0
+            player.x_pos + player.get_x_dir() * 1.1,
+            player.y_pos + player.get_y_dir() * 1.1
         );
     }
     if event_pump.keyboard_state().is_scancode_pressed(Scancode::S) {
         player.update_pos(
-            player.x_pos - player.get_x_dir() * 2.0,
-            player.y_pos - player.get_y_dir() * 2.0
+            player.x_pos - player.get_x_dir() * 1.1,
+            player.y_pos - player.get_y_dir() * 1.1
         );
     }
     return player;
