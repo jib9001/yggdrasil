@@ -177,7 +177,7 @@ fn main() {
 // --- Handle Player Input (WASD movement and rotation) ---
 fn get_input(event_pump: &sdl2::EventPump, mut player: player::Player) -> player::Player {
     if event_pump.keyboard_state().is_scancode_pressed(Scancode::A) {
-        player.update_dir(player.get_dir() - 0.1);
+        player.update_dir(player.get_dir() - 0.03);
         if player.get_dir() < 0.0 {
             player.update_dir(player.get_dir() + 2.0 * PI);
         }
@@ -185,7 +185,7 @@ fn get_input(event_pump: &sdl2::EventPump, mut player: player::Player) -> player
         player.update_y_dir(player.get_dir().sin());
     }
     if event_pump.keyboard_state().is_scancode_pressed(Scancode::D) {
-        player.update_dir(player.get_dir() + 0.1);
+        player.update_dir(player.get_dir() + 0.03);
         if player.get_dir() > 2.0 * PI {
             player.update_dir(player.get_dir() - 2.0 * PI);
         }
@@ -194,19 +194,15 @@ fn get_input(event_pump: &sdl2::EventPump, mut player: player::Player) -> player
     }
     if event_pump.keyboard_state().is_scancode_pressed(Scancode::W) {
         player.update_pos(
-            player.x_pos + player.get_x_dir() * 5.0,
-            player.y_pos + player.get_y_dir() * 5.0
+            player.x_pos + player.get_x_dir() * 1.1,
+            player.y_pos + player.get_y_dir() * 1.1
         );
     }
     if event_pump.keyboard_state().is_scancode_pressed(Scancode::S) {
         player.update_pos(
-            player.x_pos - player.get_x_dir() * 5.0,
-            player.y_pos - player.get_y_dir() * 5.0
+            player.x_pos - player.get_x_dir() * 1.1,
+            player.y_pos - player.get_y_dir() * 1.1
         );
     }
     return player;
 }
-
-
-
-
