@@ -207,11 +207,7 @@ fn get_input(event_pump: &sdl2::EventPump, mut player: player::Player) -> player
 }
 
 // --- Attempt to Move Player (collision detection and response) ---
-fn try_move_player(
-    player: &mut player::Player,
-    dx: f32,
-    dy: f32,
-) {
+fn try_move_player(player: &mut player::Player, dx: f32, dy: f32) {
     // Map constants (adjust if your map is not 8x8 or MAP_S is not 64)
     let map = window_gl::MAP;
     let map_s = window_gl::MAP_S as f32;
@@ -221,8 +217,15 @@ fn try_move_player(
     let mut new_y = player.y_pos + dy;
 
     // Calculate map cell indices for intended position
-    let cell_x = (new_x / map_s) as usize;
-    let cell_y = (new_y / map_s) as usize;
+    let mut cell_x: usize = (new_x / map_s) as usize;
+    let mut cell_y = (new_y / map_s) as usize;
+
+    if dx > 0.0 {
+        cell_x = ((new_x + 8.0) / map_s) as usize;
+    }
+    if dy > 0.0 {
+        cell_y = ((new_y + 8.0) / map_s) as usize;
+    }
 
     // Check bounds
     if cell_x >= map[0].len() || cell_y >= map.len() {
@@ -235,9 +238,9 @@ fn try_move_player(
         if map[(player.y_pos / map_s) as usize][cell_x] == 1 {
             // Blocked in X direction, snap to edge
             if dx > 0.0 {
-                new_x = (cell_x as f32) * map_s - 0.01;
+                new_x = (cell_x as f32) * map_s - 8.01;
             } else if dx < 0.0 {
-                new_x = (cell_x as f32 + 1.0) * map_s + 0.01;
+                new_x = ((cell_x as f32) + 1.0) * map_s + 0.01;
             } else {
                 new_x = player.x_pos;
             }
@@ -246,9 +249,9 @@ fn try_move_player(
         if map[cell_y][(player.x_pos / map_s) as usize] == 1 {
             // Blocked in Y direction, snap to edge
             if dy > 0.0 {
-                new_y = (cell_y as f32) * map_s - 0.01;
+                new_y = (cell_y as f32) * map_s - 8.01;
             } else if dy < 0.0 {
-                new_y = (cell_y as f32 + 1.0) * map_s + 0.01;
+                new_y = ((cell_y as f32) + 1.0) * map_s + 0.01;
             } else {
                 new_y = player.y_pos;
             }
