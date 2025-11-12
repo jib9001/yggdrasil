@@ -2,7 +2,7 @@
 use gl;
 use std;
 use std::ffi::{ CStr, CString };
-use crate::window_gl::{ HEIGHT, WIDTH, MAP, MAP_S, MAP_X, MAP_Y, single_index_map };
+use crate::window_gl::{ HEIGHT, WIDTH, MAP, MAP_S, MAP_X, MAP_Y, single_index_map, RENDER_X, RENDER_Y };
 use std::f32::consts::PI;
 use crate::draw_gl::{ get_x, get_y, VertexArrayWrapper, Color };
 use crate::player;
@@ -185,8 +185,8 @@ fn create_whitespace_cstring_with_len(len: usize) -> CString {
 pub fn construct_vertices(
     player: &player::Player,
     mut vertices: &mut VertexArrayWrapper,
-    hrays: &mut [f32; 60],
-    vrays: &mut [f32; 60],
+    hrays: &mut [f32; RENDER_X as usize],
+    vrays: &mut [f32; RENDER_Y as usize],
     _is_log: i32
 ) {
     // Map squares
@@ -306,8 +306,8 @@ fn push_line_vertices(vertices: &mut VertexArrayWrapper, player: &player::Player
 fn cast_rays(
     vertices: &mut VertexArrayWrapper,
     player: &player::Player,
-    hrays: &mut [f32; 60],
-    vrays: &mut [f32; 60],
+    hrays: &mut [f32; RENDER_X as usize],
+    vrays: &mut [f32; RENDER_Y as usize],
     _is_log: i32
 ) {
     let map = single_index_map();
@@ -323,7 +323,7 @@ fn cast_rays(
     let mut yo: f32;
     let mut ra: f32 = player.get_dir() - dr * 30.0; // Start angle for rays
 
-    for _r in 0..60 {
+    for _r in 0..RENDER_X {
         // Normalize ra
         if ra < 0.0 {
             ra += 2.0 * PI;
@@ -389,7 +389,7 @@ fn cast_rays(
             dof += 1;
         }
 
-        hrays[_r] = distance_3d((player.x_pos + 4.0, player.y_pos + 4.0, 0.0), (rx, ry, 0.0));
+        hrays[_r as usize] = distance_3d((player.x_pos + 4.0, player.y_pos + 4.0, 0.0), (rx, ry, 0.0));
 
         vertices.push(player.get_player_x(4.0));
         vertices.push(player.get_player_y(4.0));
@@ -452,7 +452,7 @@ fn cast_rays(
             dof += 1;
         }
 
-        vrays[_r] = distance_3d((player.x_pos + 4.0, player.y_pos + 4.0, 0.0), (rx, ry, 0.0));
+        vrays[_r as usize] = distance_3d((player.x_pos + 4.0, player.y_pos + 4.0, 0.0), (rx, ry, 0.0));
 
         vertices.push(player.get_player_x(4.0));
         vertices.push(player.get_player_y(4.0));
@@ -483,22 +483,22 @@ fn distance_3d(begin: (f32, f32, f32), end: (f32, f32, f32)) -> f32 {
 
 // --- Raycasting: Draw Walls to Pixel Buffer (with fisheye correction) ---
 pub fn draw_walls_to_pixels(
-    _pixels: &mut [[[u8; 3]; 60]; 60],
-    hrays: &[f32; 60],
-    vrays: &[f32; 60],
+    _pixels: &mut [[[u8; 3]; RENDER_X as usize]; RENDER_Y as usize],
+    hrays: &[f32; RENDER_X as usize],
+    vrays: &[f32; RENDER_Y as usize],
     horiz_color: [u8; 3],
     vert_color: [u8; 3],
     background_color: [u8; 3]
 ) {
-    let screen_height = 60;
-    let screen_width = 60;
+    let screen_height = RENDER_Y;
+    let screen_width = RENDER_X;
     let fov = std::f32::consts::FRAC_PI_3; // 60 degrees
     let proj_plane_dist = (screen_width as f32) / 2.0 / (fov / 2.0).tan();
     let wall_height_world = 1.0;
 
     for x in 0..screen_width {
-        let h_dist = hrays[x].max(0.0001);
-        let v_dist = vrays[x].max(0.0001);
+        let h_dist = hrays[x as usize].max(0.0001);
+        let v_dist = vrays[x as usize].max(0.0001);
 
         // Use the shorter distance for wall height
         let (raw_dist, color) = if h_dist < v_dist {
@@ -525,11 +525,11 @@ pub fn draw_walls_to_pixels(
         // Fill the pixel buffer for this column
         for y in 0..screen_height {
             if (y as i32) < wall_top {
-                _pixels[y][x] = background_color; // Ceiling
+                _pixels[y as usize][x as usize] = background_color; // Ceiling
             } else if (y as i32) >= wall_top && (y as i32) < wall_bottom {
-                _pixels[y][x] = color; // Wall
+                _pixels[y as usize][x as usize] = color; // Wall
             } else {
-                _pixels[y][x] = background_color; // Floor
+                _pixels[y as usize][x as usize] = background_color; // Floor
             }
         }
         // Uncomment for debugging wall heights:

@@ -3,7 +3,7 @@ extern crate gl; // OpenGL bindings
 extern crate sdl2; // SDL2 bindings
 
 // --- Imports from Other Modules ---
-use crate::window_gl::{ HEIGHT, WIDTH }; // Window dimensions
+use crate::window_gl::{ HEIGHT, WIDTH, RENDER_X, RENDER_Y }; // Window dimensions
 use crate::draw_gl::VertexArrayWrapper; // Wrapper for vertex array management
 use sdl2::keyboard::Scancode; // Keyboard input handling
 use std::f32::consts::PI; // Mathematical constant for pi
@@ -23,10 +23,10 @@ fn main() {
     let mut _is_log = 0; // Toggle for logging/debugging
 
     // Pixel buffer for the raycasted scene (used as a texture)
-    let mut _pixels: [[[u8; 3]; 60]; 60] = [[[0u8; 3]; 60]; 60];
+    let mut _pixels: [[[u8; 3]; RENDER_X as usize]; RENDER_Y as usize] = [[[0u8; 3]; RENDER_X as usize]; RENDER_Y as usize];
     // Arrays to store horizontal and vertical ray distances for each column
-    let mut hrays: [f32; 60] = [0.0; 60];
-    let mut vrays: [f32; 60] = [0.0; 60];
+    let mut hrays: [f32; RENDER_X as usize] = [0.0; RENDER_X as usize];
+    let mut vrays: [f32; RENDER_Y as usize] = [0.0; RENDER_Y as usize];
 
     // --- SDL2 and OpenGL Initialization ---
     let sdl = sdl2::init().unwrap();
