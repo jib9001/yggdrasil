@@ -3,7 +3,7 @@ pub const HEIGHT: u32 = 700;
 
 pub const MAP_X: i32 = 8;
 pub const MAP_Y: i32 = 8;
-pub const MAP_S: i32 = 64;
+pub const MAP_S: i32 = MAP_X * MAP_Y;
 
 pub static MAP: [[u8; MAP_X as usize]; MAP_Y as usize] = [
     [1, 1, 1, 1, 1, 1, 1, 1],
@@ -16,8 +16,8 @@ pub static MAP: [[u8; MAP_X as usize]; MAP_Y as usize] = [
     [1, 1, 1, 1, 1, 1, 1, 1],
 ];
 
-pub fn single_index_map() -> [u8; 64] {
-    let mut new_map = [0; 64];
+pub fn single_index_map() -> [u8; MAP_S as usize] {
+    let mut new_map = [0; MAP_S as usize];
 
     for i in 0..MAP_X {
         for ii in 1..=MAP_Y {
