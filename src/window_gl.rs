@@ -4,8 +4,9 @@ pub const HEIGHT: u32 = 700;
 pub const MAP_X: i32 = 8;
 pub const MAP_Y: i32 = 8;
 pub const MAP_S: i32 = MAP_X * MAP_Y;
-pub const RENDER_X: i32 = 60;
-pub const RENDER_Y: i32 = 60;
+pub const RENDER_X: i32 = 120;
+pub const RENDER_Y: i32 = 120;
+pub const RAYS_COUNT: i32 = 60;
 
 pub static MAP: [[u8; MAP_X as usize]; MAP_Y as usize] = [
     [1, 1, 1, 1, 1, 1, 1, 1],

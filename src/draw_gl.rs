@@ -172,7 +172,7 @@ impl TextureManager {
 
     // Load a texture from a file
     pub fn load_texture(&self, pixels: [[[u8; 3]; RENDER_X as usize]; RENDER_Y as usize]) -> Result<(), String> {
-        let mut flat_pixels = Vec::with_capacity(60 * 60 * 3);
+        let mut flat_pixels = Vec::with_capacity((RENDER_X * RENDER_Y * 3) as usize);
         for row in pixels {
             for pixel in row {
                 flat_pixels.extend_from_slice(&pixel);
@@ -193,8 +193,8 @@ impl TextureManager {
                 gl::TEXTURE_2D,
                 0,
                 gl::RGB as i32,
-                60,
-                60,
+                RENDER_X,
+                RENDER_Y,
                 0,
                 gl::RGB,
                 gl::UNSIGNED_BYTE,

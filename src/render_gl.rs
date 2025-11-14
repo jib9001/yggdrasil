@@ -2,7 +2,7 @@
 use gl;
 use std;
 use std::ffi::{ CStr, CString };
-use crate::window_gl::{ HEIGHT, WIDTH, MAP, MAP_S, MAP_X, MAP_Y, single_index_map, RENDER_X, RENDER_Y };
+use crate::window_gl::{ HEIGHT, WIDTH, MAP, MAP_S, MAP_X, MAP_Y, single_index_map, RENDER_X, RENDER_Y, RAYS_COUNT };
 use std::f32::consts::PI;
 use crate::draw_gl::{ get_x, get_y, VertexArrayWrapper, Color };
 use crate::player;
@@ -185,8 +185,8 @@ fn create_whitespace_cstring_with_len(len: usize) -> CString {
 pub fn construct_vertices(
     player: &player::Player,
     mut vertices: &mut VertexArrayWrapper,
-    hrays: &mut [f32; RENDER_X as usize],
-    vrays: &mut [f32; RENDER_Y as usize],
+    hrays: &mut [f32; RAYS_COUNT as usize],
+    vrays: &mut [f32; RAYS_COUNT as usize],
     _is_log: i32
 ) {
     // Map squares
@@ -217,7 +217,6 @@ pub fn construct_vertices(
 
 // --- Create Canvas Quad Vertices (for displaying the texture) ---
 fn create_canvas(vertices: &mut VertexArrayWrapper) {
-    // Each vertex: [x, y, z, r, g, b, u, v]
     let points = [
         [get_x(513.0, WIDTH), get_y(0.0, HEIGHT), 0.0, 1.0, 1.0, 1.0, 0.0, 0.0], // top-left
         [get_x(1025.0, WIDTH), get_y(0.0, HEIGHT), 0.0, 1.0, 1.0, 1.0, 1.0, 0.0], // top-right
@@ -306,8 +305,8 @@ fn push_line_vertices(vertices: &mut VertexArrayWrapper, player: &player::Player
 fn cast_rays(
     vertices: &mut VertexArrayWrapper,
     player: &player::Player,
-    hrays: &mut [f32; RENDER_X as usize],
-    vrays: &mut [f32; RENDER_Y as usize],
+    hrays: &mut [f32; RAYS_COUNT as usize],
+    vrays: &mut [f32; RAYS_COUNT as usize],
     _is_log: i32
 ) {
     let map = single_index_map();
@@ -323,7 +322,7 @@ fn cast_rays(
     let mut yo: f32;
     let mut ra: f32 = player.get_dir() - dr * 30.0; // Start angle for rays
 
-    for _r in 0..RENDER_X {
+    for _r in 0..RAYS_COUNT {
         // Normalize ra
         if ra < 0.0 {
             ra += 2.0 * PI;
@@ -484,8 +483,8 @@ fn distance_3d(begin: (f32, f32, f32), end: (f32, f32, f32)) -> f32 {
 // --- Raycasting: Draw Walls to Pixel Buffer (with fisheye correction) ---
 pub fn draw_walls_to_pixels(
     _pixels: &mut [[[u8; 3]; RENDER_X as usize]; RENDER_Y as usize],
-    hrays: &[f32; RENDER_X as usize],
-    vrays: &[f32; RENDER_Y as usize],
+    hrays: &[f32; RAYS_COUNT as usize],
+    vrays: &[f32; RAYS_COUNT as usize],
     horiz_color: [u8; 3],
     vert_color: [u8; 3],
     background_color: [u8; 3]
@@ -497,8 +496,8 @@ pub fn draw_walls_to_pixels(
     let wall_height_world = 1.0;
 
     for x in 0..screen_width {
-        let h_dist = hrays[x as usize].max(0.0001);
-        let v_dist = vrays[x as usize].max(0.0001);
+        let h_dist = hrays[(x / (screen_width / RAYS_COUNT)) as usize].max(0.0001);
+        let v_dist = vrays[(x / (screen_width / RAYS_COUNT)) as usize].max(0.0001);
 
         // Use the shorter distance for wall height
         let (raw_dist, color) = if h_dist < v_dist {
