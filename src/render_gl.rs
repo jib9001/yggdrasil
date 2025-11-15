@@ -13,6 +13,7 @@ use crate::window_gl::{
     RENDER_X,
     RENDER_Y,
     RAYS_COUNT,
+    FOV,
 };
 use std::f32::consts::PI;
 use crate::draw_gl::{ get_x, get_y, VertexArrayWrapper, Color };
@@ -321,7 +322,7 @@ fn cast_rays(
     _is_log: i32
 ) {
     let map = single_index_map();
-    let dr: f32 = 0.0174333; // Ray angle increment
+    let dr: f32 = FOV / (RAYS_COUNT as f32); // Ray angle increment scales with FOV and ray count
     let mut mx: i32;
     let mut my: i32;
     let mut _mp: i32;
@@ -331,7 +332,7 @@ fn cast_rays(
     let mut ry: f32;
     let mut xo: f32;
     let mut yo: f32;
-    let mut ra: f32 = player.get_dir() - dr * 30.0; // Start angle for rays
+    let mut ra: f32 = player.get_dir() - dr * (RAYS_COUNT as f32/2.0); // Start angle for rays
 
     for _r in 0..RAYS_COUNT {
         // Normalize ra
@@ -508,13 +509,16 @@ pub fn draw_walls_to_pixels(
 ) {
     let screen_height = RENDER_Y;
     let screen_width = RENDER_X;
-    let fov = std::f32::consts::FRAC_PI_3; // 60 degrees
-    let proj_plane_dist = (screen_width as f32) / 2.0 / (fov / 2.0).tan();
+    let proj_plane_dist = (screen_width as f32) / 2.0 / (FOV / 2.0).tan();
     let wall_height_world = 1.0;
 
     for x in 0..screen_width {
-        let h_dist = hrays[(x / (screen_width / RAYS_COUNT)) as usize].max(0.0001);
-        let v_dist = vrays[(x / (screen_width / RAYS_COUNT)) as usize].max(0.0001);
+        // Map screen column to ray index (since we may have different ray count vs screen width)
+        let ray_index = ((x as f32) * (RAYS_COUNT as f32) / (screen_width as f32)) as usize;
+        let ray_index = ray_index.min((RAYS_COUNT as usize) - 1); // Clamp to array bounds
+        
+        let h_dist = hrays[ray_index].max(0.0001);
+        let v_dist = vrays[ray_index].max(0.0001);
 
         // Use the shorter distance for wall height
         let (raw_dist, color) = if h_dist < v_dist {
@@ -525,7 +529,7 @@ pub fn draw_walls_to_pixels(
 
         // --- Fisheye correction: project ray distance onto view direction ---
         let ray_angle_offset =
-            ((x as f32) - (screen_width as f32) / 2.0) * (fov / (screen_width as f32));
+            ((x as f32) - (screen_width as f32) / 2.0) * (FOV / (screen_width as f32));
         let dist = raw_dist * ray_angle_offset.cos();
 
         // Calculate projected wall height in pixels
