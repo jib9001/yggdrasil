@@ -1,16 +1,46 @@
 # Yggdrasil
 
-Yggdrasil is a 2D raycasting engine written in Rust, utilizing SDL2 and OpenGL for rendering. It simulates a first-person perspective in a grid-based world, similar to early 3D games like Wolfenstein 3D.
+Yggdrasil is a configurable 3D raycasting engine written in Rust, utilizing SDL2 and OpenGL for real-time rendering. It creates a first-person 3D perspective from a 2D grid-based world, similar to classic games like Wolfenstein 3D and Doom, but with modern graphics libraries and flexible configuration options.
 
 ## Features
 
-- **Raycasting Engine**: Casts rays to detect walls and render a pseudo-3D environment.
-- **Player Movement**: Move and rotate the player using keyboard controls.
-- **Dynamic Rendering**: Real-time rendering of walls, player position, and rays.
-- **OpenGL Integration**: Uses OpenGL for efficient rendering, including a pixel buffer as a texture.
-- **SDL2 for Input and Window Management**: Handles user input and window creation.
-- **Custom Shaders**: Uses GLSL shaders for both colored geometry and textured canvas rendering.
-- **Nearest-Neighbor Texture Scaling**: Ensures crisp, pixel-perfect upscaling of the raycasted scene.
+### Core Raycasting Engine
+- **Fisheye Correction**: Proper perspective projection for realistic wall rendering
+- **Real-time 3D Rendering**: Converts 2D map data into a fully 3D first-person view
+- **Configurable Resolution**: Adjustable render resolution
+
+### Flexible Configuration System
+- **Scalable Field of View**: Choose from predefined FOV options or set custom values:
+  - `Narrow` (45°) - Zoomed in view for precision
+  - `Normal` (60°) - Balanced standard perspective
+  - `Wide` (90°) - Wider field of view
+  - `UltraWide` (120°) - Very wide, cinematic view
+  - `Custom(f32)` - Any custom FOV in radians
+- **Adjustable Ray Count**: Configurable ray density 
+- **Automatic Scaling**: Ray spacing automatically adjusts to maintain FOV coverage
+
+### Dual Rendering Pipeline
+- **3D Raycasted View**: 3D perspective rendering
+- **2D Debug View**: Overhead map view showing player, rays, and map layout
+- **Split-Screen Layout**: Both views displayed simultaneously for development and debugging
+
+### Advanced Graphics
+- **OpenGL 4.1 Integration**: Modern graphics pipeline with "custom" shaders
+- **Texture-based Rendering**: Raycasted scene rendered to texture for efficient scaling
+- **Nearest-Neighbor Filtering**: Crisp, pixel-perfect upscaling maintains retro aesthetic
+- **Custom GLSL Shaders**: Separate shader programs for geometry and texture rendering
+- **Real-time Buffer Management**: Dynamic vertex array and texture buffer updates
+
+### Player System
+- **Smooth Movement**: WASD controls with real-time position updates
+- **Analog Rotation**: Smooth directional control with proper angle wrapping
+- **Collision-Aware**: Movement system respects map boundaries
+- **Visual Representation**: Player and direction indicator shown in 2D view
+
+### Performance & Reliability
+- **Safe Array Access**: Bounds-checked indexing prevents crashes with any configuration
+- **Optimized Raycasting**: Efficient grid traversal with early termination
+- **Cross-Platform**: Works on Linux, macOS, and Windows
 
 ## Prerequisites
 
@@ -35,7 +65,7 @@ Install SDL2 development libraries:
 - **macOS**:  
   `brew install sdl2`
 - **Windows**:  
-  Use [vcpkg](https://github.com/microsoft/vcpkg) or download SDL2 from the [official website](https://www.libsdl.org/).
+  Download at [official website](https://github.com/libsdl-org/SDL/releases).
 
 ### OpenGL Development Libraries
 
@@ -52,7 +82,7 @@ Install OpenGL development libraries:
 - **macOS**:  
   OpenGL is included by default.
 - **Windows**:  
-  Use [vcpkg](https://github.com/microsoft/vcpkg) or download from the [official website](https://www.opengl.org/).
+  OpenGL should be included in graphics driver.
 
 ### X11 Extension Headers (Linux only)
 
@@ -85,12 +115,35 @@ Install OpenGL development libraries:
    cargo run
    ```
 
-## Controls
+## Configuration
 
-- **W**: Move forward
-- **S**: Move backward
-- **A**: Rotate left
-- **D**: Rotate right
+You can easily customize the engine's behavior by modifying constants in `src/window_gl.rs`:
+
+### Field of View Settings
+```rust
+// Change the field of view
+pub const CURRENT_FOV: FieldOfView = FieldOfView::Normal;   // 60° standard
+pub const CURRENT_FOV: FieldOfView = FieldOfView::Wide;     // 90° wide
+pub const CURRENT_FOV: FieldOfView = FieldOfView::UltraWide; // 120° ultra-wide
+pub const CURRENT_FOV: FieldOfView = FieldOfView::Custom(1.57); // Custom (90° in radians)
+```
+
+### Rendering Parameters
+```rust
+pub const RENDER_X: i32 = 120;     // Texture width (affects detail level)
+pub const RENDER_Y: i32 = 120;     // Texture height (affects detail level)
+pub const RAYS_COUNT: i32 = 100;   // Number of rays cast (affects quality/performance)
+```
+
+### Map Configuration
+The 8×8 grid map can be modified in `window_gl.rs`:
+```rust
+pub static MAP: [[u8; MAP_X as usize]; MAP_Y as usize] = [
+    [1, 1, 1, 1, 1, 1, 1, 1],  // 1 = wall, 0 = empty space
+    [1, 0, 1, 0, 0, 0, 0, 1],
+    // ... customize your map layout
+];
+```
 
 ## Project Structure
 
@@ -113,14 +166,21 @@ yggdrasil/
 └── README.md            # Project documentation
 ```
 
-### Key Files
+## Controls
 
-- **`main.rs`**: Contains the main game loop, input handling, and rendering logic.
-- **`draw_gl.rs`**: Provides utilities for managing OpenGL buffers, textures, and rendering primitives.
-- **`render_gl.rs`**: Manages shaders, OpenGL programs, and vertex construction for rendering.
-- **`player.rs`**: Defines the `Player` struct and handles player movement and direction.
-- **`square.rs`**: Represents individual map tiles as squares.
-- **`window_gl.rs`**: Handles SDL2 window creation and OpenGL context initialization.
+- **W**: Move forward
+- **S**: Move backward  
+- **A**: Rotate left (counter-clockwise)
+- **D**: Rotate right (clockwise)
+- **ESC**: Quit application
+
+### Key Files
+- **`main.rs`**: Contains the main game loop, input handling, and dual rendering pipeline.
+- **`render_gl.rs`**: Core raycasting engine, shader management, and vertex construction.
+- **`draw_gl.rs`**: OpenGL utilities for buffer management, texture handling, and rendering primitives.
+- **`window_gl.rs`**: Configuration constants, SDL2 window setup, and map data.
+- **`player.rs`**: Player entity with movement, rotation, and position management.
+- **`square.rs`**: Map tile representation and rendering data.
 
 ## How It Works
 
