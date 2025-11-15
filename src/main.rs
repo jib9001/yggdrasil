@@ -3,7 +3,7 @@ extern crate gl; // OpenGL bindings
 extern crate sdl2; // SDL2 bindings
 
 // --- Imports from Other Modules ---
-use crate::window_gl::{ HEIGHT, WIDTH }; // Window dimensions
+use crate::window_gl::{ HEIGHT, RAYS_COUNT, RENDER_X, RENDER_Y, WIDTH }; // Window dimensions
 use crate::draw_gl::VertexArrayWrapper; // Wrapper for vertex array management
 use sdl2::keyboard::Scancode; // Keyboard input handling
 use std::f32::consts::PI; // Mathematical constant for pi
@@ -23,10 +23,13 @@ fn main() {
     let mut _is_log = 0; // Toggle for logging/debugging
 
     // Pixel buffer for the raycasted scene (used as a texture)
-    let mut _pixels: [[[u8; 3]; 60]; 60] = [[[0u8; 3]; 60]; 60];
+    let mut _pixels: [[[u8; 3]; RENDER_X as usize]; RENDER_Y as usize] = [
+        [[0u8; 3]; RENDER_X as usize];
+        RENDER_Y as usize
+    ];
     // Arrays to store horizontal and vertical ray distances for each column
-    let mut hrays: [f32; 60] = [0.0; 60];
-    let mut vrays: [f32; 60] = [0.0; 60];
+    let mut hrays: [f32; RAYS_COUNT as usize] = [0.0; RAYS_COUNT as usize];
+    let mut vrays: [f32; RAYS_COUNT as usize] = [0.0; RAYS_COUNT as usize];
 
     // --- SDL2 and OpenGL Initialization ---
     let sdl = sdl2::init().unwrap();
@@ -192,17 +195,72 @@ fn get_input(event_pump: &sdl2::EventPump, mut player: player::Player) -> player
         player.update_x_dir(player.get_dir().cos());
         player.update_y_dir(player.get_dir().sin());
     }
+    // --- Use try_move_player for collision-aware movement ---
     if event_pump.keyboard_state().is_scancode_pressed(Scancode::W) {
-        player.update_pos(
-            player.x_pos + player.get_x_dir() * 1.1,
-            player.y_pos + player.get_y_dir() * 1.1
-        );
+        let dx = player.get_x_dir() * 1.1;
+        let dy = player.get_y_dir() * 1.1;
+        try_move_player(&mut player, dx, dy);
     }
     if event_pump.keyboard_state().is_scancode_pressed(Scancode::S) {
-        player.update_pos(
-            player.x_pos - player.get_x_dir() * 1.1,
-            player.y_pos - player.get_y_dir() * 1.1
-        );
+        let dx = -player.get_x_dir() * 1.1;
+        let dy = -player.get_y_dir() * 1.1;
+        try_move_player(&mut player, dx, dy);
     }
-    return player;
+    player
+}
+
+// --- Attempt to Move Player (collision detection and response) ---
+fn try_move_player(player: &mut player::Player, dx: f32, dy: f32) {
+    // Map constants (adjust if your map is not 8x8 or MAP_S is not 64)
+    let map = window_gl::MAP;
+    let map_s = window_gl::MAP_S as f32;
+
+    // Intended new position
+    let mut new_x = player.x_pos + dx;
+    let mut new_y = player.y_pos + dy;
+
+    // Calculate map cell indices for intended position
+    let mut cell_x: usize = (new_x / map_s) as usize;
+    let mut cell_y = (new_y / map_s) as usize;
+
+    if dx > 0.0 {
+        cell_x = ((new_x + 8.0) / map_s) as usize;
+    }
+    if dy > 0.0 {
+        cell_y = ((new_y + 8.0) / map_s) as usize;
+    }
+
+    // Check bounds
+    if cell_x >= map[0].len() || cell_y >= map.len() {
+        return; // Out of bounds, don't move
+    }
+
+    // If the intended cell is a wall, snap to the edge
+    if map[cell_y][cell_x] == 1 {
+        // Snap X
+        if map[(player.y_pos / map_s) as usize][cell_x] == 1 {
+            // Blocked in X direction, snap to edge
+            if dx > 0.0 {
+                new_x = (cell_x as f32) * map_s - 8.01;
+            } else if dx < 0.0 {
+                new_x = ((cell_x as f32) + 1.0) * map_s + 0.01;
+            } else {
+                new_x = player.x_pos;
+            }
+        }
+        // Snap Y
+        if map[cell_y][(player.x_pos / map_s) as usize] == 1 {
+            // Blocked in Y direction, snap to edge
+            if dy > 0.0 {
+                new_y = (cell_y as f32) * map_s - 8.01;
+            } else if dy < 0.0 {
+                new_y = ((cell_y as f32) + 1.0) * map_s + 0.01;
+            } else {
+                new_y = player.y_pos;
+            }
+        }
+    }
+
+    // If not colliding, or after snapping, update position
+    player.update_pos(new_x, new_y);
 }
