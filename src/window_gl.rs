@@ -6,7 +6,36 @@ pub const MAP_Y: i32 = 8;
 pub const MAP_S: i32 = MAP_X * MAP_Y;
 pub const RENDER_X: i32 = 120;
 pub const RENDER_Y: i32 = 120;
-pub const RAYS_COUNT: i32 = 60;
+pub const RAYS_COUNT: i32 = 120;
+// Current FOV setting - change this to adjust the field of view
+pub const CURRENT_FOV: FieldOfView = FieldOfView::Wide;
+pub const FOV: f32 = CURRENT_FOV.to_radians();
+
+// Field of View options
+#[derive(Debug, Clone, Copy)]
+pub enum FieldOfView {
+    Narrow,      // 45 degrees - zoomed in view
+    Normal,      // 60 degrees - standard view
+    Wide,        // 90 degrees - wide view
+    UltraWide,   // 120 degrees - very wide view
+    Custom(f32), // Custom FOV in radians
+}
+
+impl FieldOfView {
+    pub const fn to_radians(self) -> f32 {
+        match self {
+            FieldOfView::Narrow => std::f32::consts::FRAC_PI_4,           // 45°
+            FieldOfView::Normal => std::f32::consts::FRAC_PI_3,           // 60°
+            FieldOfView::Wide => std::f32::consts::FRAC_PI_2,             // 90°
+            FieldOfView::UltraWide => 2.0 * std::f32::consts::FRAC_PI_3,  // 120°
+            FieldOfView::Custom(radians) => radians,
+        }
+    }
+
+    pub fn to_degrees(self) -> f32 {
+        self.to_radians() * 180.0 / std::f32::consts::PI
+    }
+}
 
 pub static MAP: [[u8; MAP_X as usize]; MAP_Y as usize] = [
     [1, 1, 1, 1, 1, 1, 1, 1],
