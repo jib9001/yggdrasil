@@ -2,7 +2,18 @@
 use gl;
 use std;
 use std::ffi::{ CStr, CString };
-use crate::window_gl::{ HEIGHT, WIDTH, MAP, MAP_S, MAP_X, MAP_Y, single_index_map, RENDER_X, RENDER_Y, RAYS_COUNT };
+use crate::window_gl::{
+    HEIGHT,
+    WIDTH,
+    MAP,
+    MAP_S,
+    MAP_X,
+    MAP_Y,
+    single_index_map,
+    RENDER_X,
+    RENDER_Y,
+    RAYS_COUNT,
+};
 use std::f32::consts::PI;
 use crate::draw_gl::{ get_x, get_y, VertexArrayWrapper, Color };
 use crate::player;
@@ -388,7 +399,10 @@ fn cast_rays(
             dof += 1;
         }
 
-        hrays[_r as usize] = distance_3d((player.x_pos + 4.0, player.y_pos + 4.0, 0.0), (rx, ry, 0.0));
+        hrays[_r as usize] = distance_3d(
+            (player.x_pos + 4.0, player.y_pos + 4.0, 0.0),
+            (rx, ry, 0.0)
+        );
 
         vertices.push(player.get_player_x(4.0));
         vertices.push(player.get_player_y(4.0));
@@ -451,7 +465,10 @@ fn cast_rays(
             dof += 1;
         }
 
-        vrays[_r as usize] = distance_3d((player.x_pos + 4.0, player.y_pos + 4.0, 0.0), (rx, ry, 0.0));
+        vrays[_r as usize] = distance_3d(
+            (player.x_pos + 4.0, player.y_pos + 4.0, 0.0),
+            (rx, ry, 0.0)
+        );
 
         vertices.push(player.get_player_x(4.0));
         vertices.push(player.get_player_y(4.0));

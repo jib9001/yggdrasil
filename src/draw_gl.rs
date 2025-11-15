@@ -171,7 +171,10 @@ impl TextureManager {
     }
 
     // Load a texture from a file
-    pub fn load_texture(&self, pixels: [[[u8; 3]; RENDER_X as usize]; RENDER_Y as usize]) -> Result<(), String> {
+    pub fn load_texture(
+        &self,
+        pixels: [[[u8; 3]; RENDER_X as usize]; RENDER_Y as usize]
+    ) -> Result<(), String> {
         let mut flat_pixels = Vec::with_capacity((RENDER_X * RENDER_Y * 3) as usize);
         for row in pixels {
             for pixel in row {
