@@ -231,9 +231,9 @@ pub fn construct_vertices(
 fn create_canvas(vertices: &mut VertexArrayWrapper) {
     let points = [
         [get_x(513.0, WIDTH), get_y(0.0, HEIGHT), 0.0, 1.0, 1.0, 1.0, 0.0, 0.0], // top-left
-        [get_x(1025.0, WIDTH), get_y(0.0, HEIGHT), 0.0, 1.0, 1.0, 1.0, 1.0, 0.0], // top-right
+        [get_x(1537.0, WIDTH), get_y(0.0, HEIGHT), 0.0, 1.0, 1.0, 1.0, 1.0, 0.0], // top-right
         [get_x(513.0, WIDTH), get_y(512.0, HEIGHT), 0.0, 1.0, 1.0, 1.0, 0.0, 1.0], // bottom-left
-        [get_x(1025.0, WIDTH), get_y(512.0, HEIGHT), 0.0, 1.0, 1.0, 1.0, 1.0, 1.0], // bottom-right
+        [get_x(1537.0, WIDTH), get_y(512.0, HEIGHT), 0.0, 1.0, 1.0, 1.0, 1.0, 1.0], // bottom-right
     ];
     // First triangle
     for &i in &[0, 1, 2] {
@@ -527,10 +527,9 @@ pub fn draw_walls_to_pixels(
             (v_dist, vert_color)
         };
 
-        // --- Fisheye correction: project ray distance onto view direction ---
-        let ray_angle_offset =
-            ((x as f32) - (screen_width as f32) / 2.0) * (FOV / (screen_width as f32));
-        let dist = raw_dist * ray_angle_offset.cos();
+        // --- Better fisheye correction: use screen-space angle calculation ---
+        let screen_angle = ((x as f32) - (screen_width as f32 / 2.0)) / (screen_width as f32 / 2.0) * (FOV / 2.0);
+        let dist = raw_dist * screen_angle.cos();
 
         // Calculate projected wall height in pixels
         let mut wall_height = (20.0 * (wall_height_world * proj_plane_dist)) / dist;
