@@ -14,26 +14,26 @@ pub const FOV: f32 = CURRENT_FOV.to_radians();
 // Field of View options
 #[derive(Debug, Clone, Copy)]
 pub enum FieldOfView {
-    Narrow,      // 45 degrees - zoomed in view
-    Normal,      // 60 degrees - standard view
-    Wide,        // 90 degrees - wide view
-    UltraWide,   // 120 degrees - very wide view
+    Narrow, // 45 degrees - zoomed in view
+    Normal, // 60 degrees - standard view
+    Wide, // 90 degrees - wide view
+    UltraWide, // 120 degrees - very wide view
     Custom(f32), // Custom FOV in radians
 }
 
 impl FieldOfView {
     pub const fn to_radians(self) -> f32 {
         match self {
-            FieldOfView::Narrow => std::f32::consts::FRAC_PI_4,           // 45°
-            FieldOfView::Normal => std::f32::consts::FRAC_PI_3,           // 60°
-            FieldOfView::Wide => std::f32::consts::FRAC_PI_2,             // 90°
-            FieldOfView::UltraWide => 2.0 * std::f32::consts::FRAC_PI_3,  // 120°
+            FieldOfView::Narrow => std::f32::consts::FRAC_PI_4, // 45°
+            FieldOfView::Normal => std::f32::consts::FRAC_PI_3, // 60°
+            FieldOfView::Wide => std::f32::consts::FRAC_PI_2, // 90°
+            FieldOfView::UltraWide => 2.0 * std::f32::consts::FRAC_PI_3, // 120°
             FieldOfView::Custom(radians) => radians,
         }
     }
 
     pub fn to_degrees(self) -> f32 {
-        self.to_radians() * 180.0 / std::f32::consts::PI
+        (self.to_radians() * 180.0) / std::f32::consts::PI
     }
 }
 

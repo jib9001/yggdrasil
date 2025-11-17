@@ -112,7 +112,7 @@ fn main() {
         player = get_input(&event_pump, player);
 
         // --- Build All Vertices (map, player, lines, rays, canvas) ---
-        render_gl::construct_vertices(&player, &mut vertices, &mut hrays, &mut vrays,  _is_log);
+        render_gl::construct_vertices(&player, &mut vertices, &mut hrays, &mut vrays, _is_log);
 
         // --- Raycasting: Draw Walls to Pixel Buffer ---
         render_gl::draw_walls_to_pixels(

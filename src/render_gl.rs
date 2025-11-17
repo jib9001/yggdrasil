@@ -332,7 +332,7 @@ fn cast_rays(
     let mut ry: f32;
     let mut xo: f32;
     let mut yo: f32;
-    let mut ra: f32 = player.get_dir() - dr * (RAYS_COUNT as f32/2.0); // Start angle for rays
+    let mut ra: f32 = player.get_dir() - dr * ((RAYS_COUNT as f32) / 2.0); // Start angle for rays
 
     for _r in 0..RAYS_COUNT {
         // Normalize ra
@@ -514,9 +514,9 @@ pub fn draw_walls_to_pixels(
 
     for x in 0..screen_width {
         // Map screen column to ray index (since we may have different ray count vs screen width)
-        let ray_index = ((x as f32) * (RAYS_COUNT as f32) / (screen_width as f32)) as usize;
+        let ray_index = (((x as f32) * (RAYS_COUNT as f32)) / (screen_width as f32)) as usize;
         let ray_index = ray_index.min((RAYS_COUNT as usize) - 1); // Clamp to array bounds
-        
+
         let h_dist = hrays[ray_index].max(0.0001);
         let v_dist = vrays[ray_index].max(0.0001);
 
@@ -528,7 +528,9 @@ pub fn draw_walls_to_pixels(
         };
 
         // --- Better fisheye correction: use screen-space angle calculation ---
-        let screen_angle = ((x as f32) - (screen_width as f32 / 2.0)) / (screen_width as f32 / 2.0) * (FOV / 2.0);
+        let screen_angle =
+            (((x as f32) - (screen_width as f32) / 2.0) / ((screen_width as f32) / 2.0)) *
+            (FOV / 2.0);
         let dist = raw_dist * screen_angle.cos();
 
         // Calculate projected wall height in pixels
